@@ -1,6 +1,6 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
 import {
   FaEnvelope,
@@ -9,14 +9,13 @@ import {
   FaEyeSlash,
 } from "react-icons/fa";
 import GoogleLoginButton from "./GoogleLoginButton";
+import { supabase } from "../../supabase";
 
 export default function LoginForm() {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
-
   const [loading, setLoading] = useState(false);
-
   const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
@@ -40,12 +39,14 @@ export default function LoginForm() {
   };
 
   const validate = () => {
-    let temp = {};
+    const temp = {};
 
     if (!formData.email.trim()) {
       temp.email = "Email is required";
     } else if (
-      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
+        formData.email.trim()
+      )
     ) {
       temp.email = "Invalid email address";
     }
@@ -57,7 +58,6 @@ export default function LoginForm() {
     }
 
     setErrors(temp);
-
     return Object.keys(temp).length === 0;
   };
 
@@ -69,30 +69,21 @@ export default function LoginForm() {
     try {
       setLoading(true);
 
-      // Replace this URL with your backend
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        {
-          email: formData.email,
-          password: formData.password,
-        }
-      );
+      // Supabase manages the authentication session.
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email.trim(),
+        password: formData.password,
+      });
 
-      const token = response.data.token;
-
-      if (formData.remember) {
-        localStorage.setItem("token", token);
-      } else {
-        sessionStorage.setItem("token", token);
+      if (error) {
+        throw error;
       }
 
       toast.success("Login Successful!");
-
       navigate("/");
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Invalid email or password."
-      );
+      console.error("Login failed:", error.message);
+      toast.error("Login failed. Please check your email and password.");
     } finally {
       setLoading(false);
     }
@@ -100,7 +91,6 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md mx-auto rounded-3xl border border-yellow-500/20 bg-[#111] p-8 shadow-2xl">
-
       <h2 className="mb-2 text-center text-4xl font-bold text-yellow-400">
         Welcome Back
       </h2>
@@ -110,17 +100,13 @@ export default function LoginForm() {
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-
         {/* EMAIL */}
-
         <div>
-
           <label className="mb-2 block text-sm text-gray-300">
             Email
           </label>
 
           <div className="relative">
-
             <FaEnvelope className="absolute left-4 top-4 text-yellow-400" />
 
             <input
@@ -129,14 +115,13 @@ export default function LoginForm() {
               placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full rounded-xl bg-black py-3 pl-12 pr-4 text-white outline-none transition
-              ${
+              autoComplete="email"
+              className={`w-full rounded-xl bg-black py-3 pl-12 pr-4 text-white outline-none transition ${
                 errors.email
                   ? "border border-red-500"
                   : "border border-gray-700 focus:border-yellow-400"
               }`}
             />
-
           </div>
 
           {errors.email && (
@@ -144,19 +129,15 @@ export default function LoginForm() {
               {errors.email}
             </p>
           )}
-
         </div>
 
         {/* PASSWORD */}
-
         <div>
-
           <label className="mb-2 block text-sm text-gray-300">
             Password
           </label>
 
           <div className="relative">
-
             <FaLock className="absolute left-4 top-4 text-yellow-400" />
 
             <input
@@ -165,8 +146,8 @@ export default function LoginForm() {
               placeholder="Enter password"
               value={formData.password}
               onChange={handleChange}
-              className={`w-full rounded-xl bg-black py-3 pl-12 pr-12 text-white outline-none transition
-              ${
+              autoComplete="current-password"
+              className={`w-full rounded-xl bg-black py-3 pl-12 pr-12 text-white outline-none transition ${
                 errors.password
                   ? "border border-red-500"
                   : "border border-gray-700 focus:border-yellow-400"
@@ -175,12 +156,12 @@ export default function LoginForm() {
 
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-4 top-3.5 text-gray-400"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
-
           </div>
 
           {errors.password && (
@@ -188,22 +169,17 @@ export default function LoginForm() {
               {errors.password}
             </p>
           )}
-
         </div>
 
         <div className="flex items-center justify-between">
-
           <label className="flex items-center gap-2 text-sm text-gray-400">
-
             <input
               type="checkbox"
               name="remember"
               checked={formData.remember}
               onChange={handleChange}
             />
-
             Remember Me
-
           </label>
 
           <Link
@@ -212,9 +188,7 @@ export default function LoginForm() {
           >
             Forgot Password?
           </Link>
-
         </div>
-                {/* LOGIN BUTTON */}
 
         <button
           type="submit"
@@ -227,33 +201,22 @@ export default function LoginForm() {
         >
           {loading ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
               Logging In...
             </div>
           ) : (
             "Login"
           )}
         </button>
-
       </form>
 
-      {/* Divider */}
-
       <div className="my-8 flex items-center">
-        <div className="h-px flex-1 bg-gray-700"></div>
-
-        <span className="px-4 text-sm text-gray-400">
-          OR
-        </span>
-
-        <div className="h-px flex-1 bg-gray-700"></div>
+        <div className="h-px flex-1 bg-gray-700" />
+        <span className="px-4 text-sm text-gray-400">OR</span>
+        <div className="h-px flex-1 bg-gray-700" />
       </div>
 
-      {/* GOOGLE LOGIN */}
-
       <GoogleLoginButton />
-
-      {/* REGISTER */}
 
       <p className="mt-8 text-center text-gray-400">
         Don't have an account?{" "}
@@ -264,7 +227,6 @@ export default function LoginForm() {
           Register
         </Link>
       </p>
-
     </div>
   );
 }

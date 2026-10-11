@@ -31,7 +31,7 @@ import { About } from './pages/About';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { NotFound } from './pages/NotFound';
-import { AddProducts } from "./pages/admin/AddProducts";
+import { AddProducts } from "./pages/admin/AddProducts.jsx";
 
 // Admin Suite Pages
 import { AdminDashboard } from './pages/admin/Dashboard';
