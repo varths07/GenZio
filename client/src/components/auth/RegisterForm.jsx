@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabase";
+import { useShop } from "../../context/ShopContext";
 import "./Register.css";
 
 function Register() {
+  const navigate = useNavigate();
+  const { user, authLoading } = useShop();
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -19,6 +24,22 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
+
+  if (authLoading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+        {authLoading ? "Checking your session..." : "Redirecting..."}
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -34,6 +55,7 @@ function Register() {
     });
 
     setSuccess("");
+    setError("");
   };
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
@@ -75,30 +97,43 @@ function Register() {
     pincodeValid &&
     form.terms;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!requiredFieldsValid) return;
 
-    // Demo only.
-    // In a real application, send the password securely
-    // to your backend instead of storing it in frontend code.
+    setError("");
+    setSuccess("");
+    setLoading(true);
 
-    setSuccess("Account created successfully! 🎉");
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+        options: {
+          data: {
+            full_name: form.fullName.trim(),
+            mobile: form.mobile,
+            address: form.address.trim(),
+            city: form.city.trim(),
+            state: form.state,
+            pincode: form.pincode,
+          },
+        },
+      });
 
-    setForm({
-      fullName: "",
-      email: "",
-      mobile: "",
-      password: "",
-      confirmPassword: "",
-      address: "",
-      city: "",
-      state: "",
-      pincode: "",
-      profilePicture: null,
-      terms: false,
-    });
+      if (signUpError) throw signUpError;
+
+      if (data.session) {
+        navigate("/profile", { replace: true });
+      } else {
+        setSuccess("Account created. Check your email to confirm your account, then sign in.");
+      }
+    } catch (submitError) {
+      setError(submitError.message || "Unable to create your account. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -135,6 +170,12 @@ function Register() {
           {success && (
             <div className="success-message">
               {success}
+            </div>
+          )}
+
+          {error && (
+            <div className="error" role="alert">
+              {error}
             </div>
           )}
 
@@ -367,9 +408,9 @@ function Register() {
             <button
               type="submit"
               className="register-button"
-              disabled={!requiredFieldsValid}
+              disabled={!requiredFieldsValid || loading}
             >
-              Create Account
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
 
           </form>

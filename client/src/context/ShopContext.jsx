@@ -10,6 +10,27 @@ import { supabase } from "../supabase";
 
 const ShopContext = createContext();
 
+const mapAuthUser = (authUser) => {
+  const metadata = authUser.user_metadata || {};
+
+  return {
+    id: authUser.id,
+    name:
+      metadata.full_name ||
+      metadata.name ||
+      authUser.email?.split("@")[0] ||
+      "Account",
+    email: authUser.email || "",
+    avatar: metadata.avatar_url || "",
+    vipStatus: "Member",
+    mobile: metadata.mobile || "",
+    address: metadata.address || "",
+    city: metadata.city || "",
+    state: metadata.state || "",
+    pincode: metadata.pincode || "",
+  };
+};
+
 export const ShopProvider = ({ children }) => {
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [cart, setCart] = useState([]);
@@ -21,33 +42,102 @@ export const ShopProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
   const [toasts, setToasts] = useState([]);
 
-  const [orders, setOrders] = useState([
-    {
-      id: "ORD-9821",
-      date: "2026-07-28",
-      total: 720,
-      status: "Shipped",
-      trackingNumber: "TRK-981240-EU",
-      items: [
-        {
-          name: "OVERSIZED LUXURY CASHMERE HOODIE",
-          qty: 1,
-          price: 380,
-          image:
-            "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=300&q=80",
-        },
-        {
-          name: "AURA VORTEX 900 MATRIX SNEAKER",
-          qty: 1,
-          price: 340,
-          image:
-            "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=300&q=80",
-        },
-      ],
-    },
-  ]);
+  useEffect(() => {
+    let isMounted = true;
+    let authRequestId = 0;
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const requestId = ++authRequestId;
+
+      if (!session) {
+        setUser(null);
+        setAuthError("");
+        setAuthLoading(false);
+        return;
+      }
+
+      // Keep the account available from the restored session while verifying it.
+      const sessionUser = session.user;
+      if (sessionUser) {
+        setUser(mapAuthUser(sessionUser));
+      }
+      setAuthLoading(true);
+      setAuthError("");
+
+      Promise.resolve().then(async () => {
+        try {
+          const {
+            data: { user: authUser },
+            error,
+          } = await supabase.auth.getUser();
+
+          if (!isMounted || requestId !== authRequestId) return;
+
+          if (error) {
+            throw error;
+          }
+          if (!authUser) {
+            throw new Error("The authentication provider returned no user.");
+          }
+
+          setUser(mapAuthUser(authUser));
+          setAuthError("");
+        } catch (error) {
+          if (!isMounted || requestId !== authRequestId) return;
+
+          // A verification/network failure does not prove that the stored session
+          // is invalid. Retain its user and expose the failure instead of logging out.
+          setAuthError(error.message || "Unable to verify your session.");
+          console.error("Authentication session verification failed:", error);
+        } finally {
+          if (isMounted && requestId === authRequestId) {
+            setAuthLoading(false);
+          }
+        }
+      });
+    });
+
+    return () => {
+      isMounted = false;
+      authRequestId += 1;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signOut = async () => {
+    setAuthLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      setUser(null);
+      setAuthError("");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const [ordersByUser, setOrdersByUser] = useState({});
+  const orders = user?.id ? ordersByUser[user.id] || [] : [];
+
+  const setOrders = (nextOrders) => {
+    if (!user?.id) return;
+
+    setOrdersByUser((currentOrdersByUser) => {
+      const currentOrders = currentOrdersByUser[user.id] || [];
+      const updatedOrders =
+        typeof nextOrders === "function"
+          ? nextOrders(currentOrders)
+          : nextOrders;
+
+      return { ...currentOrdersByUser, [user.id]: updatedOrders };
+    });
+  };
 
   // Load active products from Supabase.
   useEffect(() => {
@@ -264,6 +354,9 @@ export const ShopProvider = ({ children }) => {
         searchQuery,
         setSearchQuery,
         user,
+        authLoading,
+        authError,
+        signOut,
         orders,
         setOrders,
         toasts,

@@ -1,29 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, Lock, CreditCard, CheckCircle2, ArrowRight, Truck, Sparkles } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 
 export const Checkout = () => {
-  const { cart, cartSubtotal, cartTotal, discountAmount, clearCart, setOrders, addToast } = useShop();
+  const { cart, cartSubtotal, cartTotal, discountAmount, clearCart, setOrders, addToast, user } = useShop();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    firstName: 'DHANUREESH',
-    lastName: 'B',
-    email: 'DHANU.vance@luxury.com',
-    address: '740 Park Avenue, Apt 14B',
-    city: 'TRICHY',
+    firstName: '',
+    lastName: '',
+    email: '',
+    address: '',
+    city: '',
     country: 'India',
-    zip: '10021',
-    paymentMethod: 'GooglePay', // 'applePay', 'card', 'crypto'
-    cardNumber: '•••• •••• •••• 9812',
-    cardExp: '12/28',
-    cardCvc: '•••'
+    zip: '',
+    paymentMethod: '',
+    cardNumber: '',
+    cardExp: '',
+    cardCvc: ''
   });
 
   const [isOrderComplete, setIsOrderComplete] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const [firstName = '', ...lastNameParts] = user.name.split(/\s+/);
+    setFormData((current) => ({
+      ...current,
+      firstName,
+      lastName: lastNameParts.join(' '),
+      email: user.email,
+      address: user.address,
+      city: user.city,
+      zip: user.pincode,
+    }));
+  }, [user]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

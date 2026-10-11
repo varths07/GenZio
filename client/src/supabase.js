@@ -8,3 +8,4 @@ export const supabase = createClient(
   supabaseUrl,
   supabasePublishableKey
 );
+console.log("Supabase client loaded:", !!supabase);

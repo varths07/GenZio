@@ -1,6 +1,6 @@
 import React from 'react';
 import { useShop } from '../context/ShopContext';
-import { User, Shield, Award, MapPin, CreditCard, Heart, ShoppingBag, LogOut } from 'lucide-react';
+import { Shield, MapPin, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Profile = () => {
@@ -12,11 +12,17 @@ export const Profile = () => {
       {/* Profile Header */}
       <div className="glass-panel-gold rounded-3xl p-8 border border-luxury-gold/40 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center space-x-6">
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-24 h-24 rounded-full object-cover border-2 border-luxury-gold shadow-glow-gold"
-          />
+          {user.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="w-24 h-24 rounded-full object-cover border-2 border-luxury-gold shadow-glow-gold"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full border-2 border-luxury-gold shadow-glow-gold flex items-center justify-center text-3xl font-bold text-luxury-gold">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <h1 className="text-3xl font-black text-white">{user.name}</h1>
@@ -25,7 +31,7 @@ export const Profile = () => {
               </span>
             </div>
             <p className="text-gray-300 text-xs font-mono">{user.email}</p>
-            <p className="text-gray-400 text-xs pt-1">Member since Haute Season 2024 &bull; Concierge Level Access</p>
+            <p className="text-gray-400 text-xs pt-1">GenZio account member</p>
           </div>
         </div>
 
@@ -43,8 +49,14 @@ export const Profile = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           { icon: Shield, title: "VIP Concierge & Support", desc: "Dedicated personal fashion advisor available 24/7." },
-          { icon: MapPin, title: "Saved Addresses", desc: "740 Park Avenue, Apt 14B, New York, NY 10021" },
-          { icon: CreditCard, title: "Payment Cards", desc: "Visa Gold ending in •••• 9812" }
+          {
+            icon: MapPin,
+            title: "Saved Address",
+            desc: [user.address, [user.city, user.state, user.pincode].filter(Boolean).join(", ")]
+              .filter(Boolean)
+              .join("\n") || "No address saved.",
+          },
+          { icon: CreditCard, title: "Payment Cards", desc: "No payment methods saved." }
         ].map((box, idx) => (
           <div key={idx} className="glass-panel rounded-3xl p-6 border border-white/10 space-y-3">
             <div className="w-10 h-10 rounded-xl bg-luxury-gold/20 flex items-center justify-center text-luxury-gold">

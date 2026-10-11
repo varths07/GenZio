@@ -1,13 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, ShoppingBag, Heart, User, Sun, Moon, Menu, X, ShieldCheck } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { cart, wishlist, setIsCartOpen, setSearchOpen, user } = useShop();
+  const {
+    cart,
+    wishlist,
+    setIsCartOpen,
+    setSearchOpen,
+    user,
+    authLoading,
+    signOut,
+    addToast,
+  } = useShop();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setMobileMenuOpen(false);
+      navigate('/', { replace: true });
+    } catch (error) {
+      addToast(error.message || 'Unable to log out. Please try again.', 'error');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -134,20 +154,40 @@ export const Navbar = () => {
 
             {/* Profile Link */}
             <div className="flex items-center gap-3">
-  <Link
-    to="/login"
-    className="px-4 py-2 border border-luxury-gold text-luxury-gold rounded-lg hover:bg-luxury-gold hover:text-black transition"
-  >
-    Login
-  </Link>
-
-  <Link
-    to="/register"
-    className="px-4 py-2 bg-luxury-gold text-black rounded-lg font-semibold hover:opacity-90 transition"
-  >
-    Sign Up
-  </Link>
-</div>
+              {!authLoading && (user ? (
+                <>
+                  <Link
+                    to="/profile"
+                    className="max-w-32 truncate text-sm text-luxury-gold hover:text-white transition"
+                    title={user.name}
+                  >
+                    {user.name}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-4 py-2 border border-luxury-gold text-luxury-gold rounded-lg hover:bg-luxury-gold hover:text-black transition"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 border border-luxury-gold text-luxury-gold rounded-lg hover:bg-luxury-gold hover:text-black transition"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-4 py-2 bg-luxury-gold text-black rounded-lg font-semibold hover:opacity-90 transition"
+                  >
+                    Register
+                  </Link>
+                </>
+              ))}
+            </div>
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -174,6 +214,41 @@ export const Navbar = () => {
               </Link>
             ))}
           </div>
+          {!authLoading && (user ? (
+            <div className="flex items-center justify-between border-t border-white/10 pt-4">
+              <Link
+                to="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="truncate text-sm font-semibold text-luxury-gold"
+              >
+                {user.name}
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-sm font-semibold text-gray-200 hover:text-luxury-gold"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3 border-t border-white/10 pt-4">
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-sm font-semibold text-luxury-gold"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-sm font-semibold text-gray-200"
+              >
+                Register
+              </Link>
+            </div>
+          ))}
         </div>
       )}
     </header>
