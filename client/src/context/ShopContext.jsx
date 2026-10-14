@@ -5,7 +5,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { MOCK_PRODUCTS } from "../data/mockProducts";
+import { DEMO_PRODUCTS, DEMO_PRODUCTS_ENABLED } from "../data/demoProducts";
 import { supabase } from "../supabase";
 
 const ShopContext = createContext();
@@ -32,7 +32,10 @@ const mapAuthUser = (authUser) => {
 };
 
 export const ShopProvider = ({ children }) => {
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
+  const storefrontProducts = DEMO_PRODUCTS_ENABLED
+    ? [...products, ...DEMO_PRODUCTS]
+    : products;
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -152,7 +155,7 @@ export const ShopProvider = ({ children }) => {
 
       if (error) {
         console.error("Failed to load Supabase products:", error);
-        return; // Keep the existing mock products.
+        return;
       }
 
       if (!isMounted) return;
@@ -170,6 +173,7 @@ export const ShopProvider = ({ children }) => {
         images: item.image_url ? [item.image_url] : [],
         colors: item.colors || [],
         sizes: item.sizes || [],
+        isDemo: false,
       }));
 
       setProducts(databaseProducts);
@@ -326,6 +330,7 @@ export const ShopProvider = ({ children }) => {
     <ShopContext.Provider
       value={{
         products,
+        storefrontProducts,
         setProducts,
         cart,
         addToCart,

@@ -1,15 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, Heart, User, Sun, Moon, Menu, X, ShieldCheck } from 'lucide-react';
-import { useShop } from '../../context/ShopContext';
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from "framer-motion";
+import {
+  Heart,
+  Menu,
+  Search,
+  ShoppingBag,
+  UserRound,
+  X,
+} from "lucide-react";
+import { useShop } from "../../context/ShopContext";
+
+const storeLinks = [
+  { name: "Discover", path: "/" },
+  { name: "Collections", path: "/shop" },
+  { name: "New Season", path: "/new-arrivals" },
+];
+
+const adminLinks = [
+  { name: "Dashboard", path: "/admin/dashboard" },
+  { name: "Products", path: "/admin/products" },
+  { name: "Orders", path: "/admin/orders" },
+  { name: "Storefront", path: "/" },
+];
 
 export const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
   const {
     cart,
     wishlist,
-    setIsCartOpen,
     setSearchOpen,
     user,
     authLoading,
@@ -18,239 +44,271 @@ export const Navbar = () => {
   } = useShop();
   const location = useLocation();
   const navigate = useNavigate();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const isHome = location.pathname === "/";
+  const [homeHeaderSolid, setHomeHeaderSolid] = useState(false);
+  const { scrollY } = useScroll();
+  const visibleLinks = isAdmin ? adminLinks : storeLinks;
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const accountPath = authLoading ? "/login" : user ? "/profile" : "/login";
+
+  useEffect(() => {
+    setHomeHeaderSolid(!isHome || window.scrollY > 150);
+  }, [isHome]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  useMotionValueEvent(scrollY, "change", (current) => {
+    if (isHome) setHomeHeaderSolid(current > 150);
+  });
 
   const handleLogout = async () => {
     try {
       await signOut();
       setMobileMenuOpen(false);
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     } catch (error) {
-      addToast(error.message || 'Unable to log out. Please try again.', 'error');
+      addToast(error.message || "Unable to log out. Please try again.", "error");
     }
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const openSearch = () => {
+    setMobileMenuOpen(false);
+    setSearchOpen(true);
+  };
 
-  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const wishlistCount = wishlist.length;
-
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Shop', path: '/shop' },
-    
-    { name: 'New Arrivals', path: '/new-arrivals' },
-    { name: 'Sale', path: '/sale', highlight: true },
-    { name: 'Contact', path: '/contact' },
-    { name: 'Admin', path: '/admin', isBadge: true },
-  ];
+  const linkClassName = (path) =>
+    `genzio-nav-link relative py-3 text-[10px] font-medium uppercase tracking-[0.17em] transition-colors duration-300 after:absolute after:bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#d5c49e] after:transition-transform after:duration-300 hover:after:scale-x-100 ${
+      location.pathname === path ? "text-[#d5c49e]" : "text-[#f4f1ea]/85"
+    } ${location.pathname === path ? "after:scale-x-100" : ""}`;
 
   return (
     <header
-  className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-    isScrolled
-      ? 'glass-nav py-3.5 shadow-luxury'
-      : 'bg-transparent py-6 border-b border-white/5'
-  }`}
->
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-luxury-goldDark via-luxury-gold to-luxury-goldLight p-0.5 flex items-center justify-center shadow-glow-gold group-hover:scale-105 transition-transform duration-300">
-              <div className="w-full h-full bg-[#070709] rounded-[10px] flex items-center justify-center">
-                <span className="font-extrabold text-luxury-gold text-lg tracking-widest">A</span>
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-[0.25em] text-white group-hover:text-luxury-gold transition-colors">
-                GenZio
-              </span>
-              <span className="text-[10px] tracking-[0.3em] text-luxury-gold font-medium uppercase">
-                Haute Couture Men
-              </span>
-            </div>
-          </Link>
+      className={`relative z-40 border-b text-[#f4f1ea] transition-colors duration-500 ${
+        isHome ? "fixed inset-x-0 top-0" : "sticky top-0"
+      } ${
+        isAdmin
+          ? "border-white/10 bg-[#171b16]"
+          : isHome && !homeHeaderSolid
+            ? "border-transparent bg-transparent"
+            : "border-white/10 bg-[#171b16]/95 shadow-sm backdrop-blur-md"
+      }`}
+    >
+      <div className="relative mx-auto flex min-h-[72px] max-w-[1600px] items-center justify-between px-4 sm:min-h-[82px] sm:px-8 lg:px-[5vw]">
+        <button
+          type="button"
+          className="grid h-10 w-10 place-items-center text-[#f4f1ea] transition-colors hover:text-[#d5c49e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d5c49e] lg:hidden"
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="genzio-mobile-menu"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? (
+            <X className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-8">
-            {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
-              return (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className={`text-sm font-medium tracking-wider transition-all duration-300 relative py-1 ₹{
-                    link.highlight
-                      ? 'text-luxury-gold font-semibold'
-                      : isActive
-                      ? 'text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {link.name}
-                  {link.isBadge && (
-                    <span className="ml-1.5 px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/40">
-                      Pro
-                    </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-luxury-gold to-white rounded-full" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Quick Actions */}
-          <div className="flex items-center space-x-4 sm:space-x-6">
-            
-            {/* Search Button */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="p-2 text-gray-300 hover:text-luxury-gold transition-colors duration-200 rounded-full hover:bg-white/5"
-              title="Search store"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Wishlist Icon */}
+        <nav
+          aria-label="Main navigation"
+          className="hidden items-center gap-7 lg:flex xl:gap-10"
+        >
+          {visibleLinks.map((link) => (
             <Link
-              to="/wishlist"
-              className="p-2 text-gray-300 hover:text-luxury-gold transition-colors duration-200 rounded-full hover:bg-white/5 relative"
-              title="Wishlist"
+              key={link.path}
+              to={link.path}
+              aria-current={
+                location.pathname === link.path ? "page" : undefined
+              }
+              className={linkClassName(link.path)}
             >
-              <Heart className="w-5 h-5" />
-              {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-luxury-gold text-black font-extrabold text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-glow-gold">
-                  {wishlistCount}
-                </span>
-              )}
+              {link.name}
             </Link>
+          ))}
+        </nav>
 
-            {/* Cart Drawer Trigger */}
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="p-2 text-gray-300 hover:text-luxury-gold transition-colors duration-200 rounded-full hover:bg-white/5 relative group"
-              title="Cart"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              {totalCartItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-luxury-gold text-black font-extrabold text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-glow-gold">
-                  {totalCartItems}
-                </span>
-              )}
-            </button>
+        <Link
+          to="/"
+          className="absolute left-1/2 flex -translate-x-1/2 flex-col items-center"
+          aria-label="GenZio home"
+        >
+          <span className="font-serif text-[21px] leading-none tracking-[0.17em] sm:text-[26px] sm:tracking-[0.2em]">
+            GENZIO
+          </span>
+          <span className="mt-1.5 text-[7px] font-medium uppercase tracking-[0.38em] text-[#d5c49e] sm:text-[8px]">
+            {isAdmin ? "Admin" : "Menswear"}
+          </span>
+        </Link>
 
-            {/* Profile Link */}
-            <div className="flex items-center gap-3">
-              {!authLoading && (user ? (
-                <>
-                  <Link
-                    to="/profile"
-                    className="max-w-32 truncate text-sm text-luxury-gold hover:text-white transition"
-                    title={user.name}
-                  >
-                    {user.name}
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="px-4 py-2 border border-luxury-gold text-luxury-gold rounded-lg hover:bg-luxury-gold hover:text-black transition"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="px-4 py-2 border border-luxury-gold text-luxury-gold rounded-lg hover:bg-luxury-gold hover:text-black transition"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="px-4 py-2 bg-luxury-gold text-black rounded-lg font-semibold hover:opacity-90 transition"
-                  >
-                    Register
-                  </Link>
-                </>
-              ))}
-            </div>
-            {/* Mobile Hamburger Toggle */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-300 hover:text-white"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+        <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3">
+          <button
+            type="button"
+            onClick={openSearch}
+            aria-label="Search products"
+            className="hidden h-10 w-10 place-items-center transition-colors hover:text-[#d5c49e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d5c49e] lg:grid"
+          >
+            <Search className="h-[18px] w-[18px]" aria-hidden="true" />
+          </button>
+          <Link
+            to={accountPath}
+            aria-label={user ? "Your account" : "Sign in"}
+            className="hidden h-10 w-10 place-items-center transition-colors hover:text-[#d5c49e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d5c49e] lg:grid"
+          >
+            <UserRound className="h-[18px] w-[18px]" aria-hidden="true" />
+          </Link>
+          <Link
+            to="/cart"
+            aria-label={`Shopping bag${cartCount ? `, ${cartCount} items` : ""}`}
+            className="relative grid h-10 w-10 place-items-center transition-colors hover:text-[#d5c49e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d5c49e]"
+          >
+            <ShoppingBag className="h-[18px] w-[18px]" aria-hidden="true" />
+            {cartCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-[#d5c49e] px-1 text-[9px] font-semibold text-[#171b16]">
+                {cartCount}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden glass-panel border-t border-white/10 mt-3 px-6 py-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-semibold tracking-wider text-gray-200 hover:text-luxury-gold py-2 px-3 rounded-lg hover:bg-white/5 transition-colors"
+      <AnimatePresence initial={false}>
+        {mobileMenuOpen && (
+          <motion.div
+            className="fixed inset-0 z-[60] bg-black/45 backdrop-blur-[2px] lg:hidden"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.22 }}
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setMobileMenuOpen(false);
+              }
+            }}
+          >
+            <motion.aside
+              id="genzio-mobile-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation menu"
+              className="flex h-full w-[min(88vw,390px)] flex-col overflow-y-auto bg-[#f4f1ea] px-6 pb-8 pt-5 text-[#20201d] shadow-2xl sm:px-8"
+              initial={reduceMotion ? false : { x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.32,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              <div className="flex items-start justify-between border-b border-[#d7d1c6] pb-6">
+                <div>
+                  <p className="font-serif text-2xl tracking-[0.12em]">
+                    GENZIO
+                  </p>
+                  <p className="mt-1.5 text-[8px] uppercase tracking-[0.28em] text-[#817b70]">
+                    Considered menswear
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close navigation menu"
+                  className="grid h-10 w-10 place-items-center text-[#514b42] transition-colors hover:text-[#8c6b3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e]"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <nav
+                aria-label="Mobile navigation"
+                className="mt-3 flex flex-col"
               >
-                {link.name}
-              </Link>
-            ))}
-          </div>
-          {!authLoading && (user ? (
-            <div className="flex items-center justify-between border-t border-white/10 pt-4">
-              <Link
-                to="/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="truncate text-sm font-semibold text-luxury-gold"
-              >
-                {user.name}
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="text-sm font-semibold text-gray-200 hover:text-luxury-gold"
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-3 border-t border-white/10 pt-4">
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-semibold text-luxury-gold"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-semibold text-gray-200"
-              >
-                Register
-              </Link>
-            </div>
-          ))}
-        </div>
-      )}
+                {visibleLinks.map((link, index) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={
+                      location.pathname === link.path ? "page" : undefined
+                    }
+                    className={`flex items-baseline justify-between border-b border-[#d7d1c6] py-5 font-serif text-[25px] transition-colors hover:text-[#8c6b3e] ${
+                      location.pathname === link.path
+                        ? "text-[#8c6b3e]"
+                        : "text-[#20201d]"
+                    }`}
+                  >
+                    <span>{link.name}</span>
+                    <span className="font-sans text-[9px] uppercase tracking-[0.18em] text-[#9b958a]">
+                      0{index + 1}
+                    </span>
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="mt-8 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={openSearch}
+                  className="flex min-h-12 items-center gap-2 border border-[#d7d1c6] px-3 text-[10px] font-medium uppercase tracking-[0.12em] transition-colors hover:border-[#8c6b3e] hover:text-[#8c6b3e]"
+                >
+                  <Search className="h-4 w-4" aria-hidden="true" />
+                  Search
+                </button>
+                <Link
+                  to={accountPath}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex min-h-12 items-center gap-2 border border-[#d7d1c6] px-3 text-[10px] font-medium uppercase tracking-[0.12em] transition-colors hover:border-[#8c6b3e] hover:text-[#8c6b3e]"
+                >
+                  <UserRound className="h-4 w-4" aria-hidden="true" />
+                  {user ? "My account" : "Sign in"}
+                </Link>
+                {!isAdmin && (
+                  <Link
+                    to="/wishlist"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="col-span-2 flex min-h-12 items-center gap-2 border border-[#d7d1c6] px-3 text-[10px] font-medium uppercase tracking-[0.12em] transition-colors hover:border-[#8c6b3e] hover:text-[#8c6b3e]"
+                  >
+                    <Heart className="h-4 w-4" aria-hidden="true" />
+                    Wishlist
+                    {wishlist.length > 0 && ` (${wishlist.length})`}
+                  </Link>
+                )}
+              </div>
+
+              {!isAdmin && (
+                <Link
+                  to="/contact"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-auto pt-10 text-[9px] font-medium uppercase tracking-[0.2em] text-[#817b70] transition-colors hover:text-[#8c6b3e]"
+                >
+                  Contact GenZio
+                </Link>
+              )}
+              {user && (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="mt-6 self-start text-[9px] font-medium uppercase tracking-[0.2em] text-[#817b70] transition-colors hover:text-[#8c6b3e]"
+                >
+                  Sign out
+                </button>
+              )}
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

@@ -1,22 +1,44 @@
+import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { supabase } from "../../supabase";
 
 export default function GoogleLoginButton() {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleGoogleLogin = () => {
-    console.log("Google Login Clicked");
+  const handleGoogleLogin = async () => {
+    setError("");
+    setLoading(true);
 
-    // TODO:
-    // Integrate Firebase or Google OAuth here
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (oauthError) throw oauthError;
+    } catch (oauthError) {
+      console.error("Google sign-in failed:", oauthError);
+      setError(oauthError.message || "Unable to start Google sign-in.");
+      setLoading(false);
+    }
   };
 
   return (
-    <button
-      onClick={handleGoogleLogin}
-      className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-700 bg-black py-3 text-white transition-all duration-300 hover:border-yellow-400 hover:bg-[#1a1a1a]"
-    >
-      <FcGoogle size={24} />
-
-      Continue with Google
-    </button>
+    <>
+      {error && (
+        <p role="alert" className="mb-3 text-sm text-red-800">
+          {error}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        disabled={loading}
+        className="flex min-h-11 w-full items-center justify-center gap-3 border border-[#cfc8ba] bg-[#f4f1ea] text-sm text-[#20201d] transition-colors hover:border-[#555c45] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <FcGoogle size={20} aria-hidden="true" />
+        {loading ? "Connecting..." : "Continue with Google"}
+      </button>
+    </>
   );
 }

@@ -1,139 +1,120 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Instagram, Twitter, Facebook, Youtube, ShieldCheck, CreditCard, ArrowRight } from 'lucide-react';
-import { useShop } from '../../context/ShopContext';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { ArrowUp } from "lucide-react";
+import { Reveal } from "../ui/Reveal";
+
+const footerGroups = [
+  {
+    title: "Shop",
+    links: [
+      ["All menswear", "/shop"],
+      ["New arrivals", "/new-arrivals"],
+      ["Clothing", "/clothing"],
+      ["Footwear", "/footwear"],
+    ],
+  },
+  {
+    title: "GenZio",
+    links: [
+      ["Our story", "/about"],
+      ["Contact", "/contact"],
+      ["My account", "/profile"],
+      ["Wishlist", "/wishlist"],
+    ],
+  },
+  {
+    title: "Help & information",
+    links: [
+      ["Order history", "/orders"],
+      ["Shipping", "/shipping"],
+      ["Returns", "/returns"],
+      ["Size guide", "/size-guide"],
+    ],
+  },
+];
 
 export const Footer = () => {
-  const { addToast } = useShop();
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    addToast('Thank you for joining the AURA & NOIR VIP Club!', 'success');
-  };
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const isHome = location.pathname === "/";
+  const FooterContent = isHome ? Reveal : "div";
 
   return (
-    <footer className="bg-[#050507] border-t border-white/10 pt-20 pb-12 relative overflow-hidden text-gray-400 text-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
-          
-          {/* Brand Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-luxury-goldDark to-luxury-gold flex items-center justify-center text-black font-black">
-                A
-              </div>
-              <span className="text-xl font-extrabold tracking-[0.25em] text-white">
-                AURA & NOIR
-              </span>
+  <footer
+    className={`text-[#f4f1ea] ${
+      isAdmin ? "border-t border-white/10 bg-[#050507]" : "bg-[#111b13]"
+    }`}
+  >
+    <FooterContent className="mx-auto max-w-[1600px] px-5 pb-8 pt-16 sm:px-10 lg:px-[8vw]">
+      <div className="grid gap-12 border-b border-white/15 pb-12 md:grid-cols-[1.4fr_2fr]">
+        <div>
+          <Link to="/" className="inline-flex flex-col" aria-label="GenZio home">
+            <span className="font-serif text-3xl tracking-[0.08em]">GenZio</span>
+            <span className="mt-1 text-[9px] uppercase tracking-[0.28em] text-[#c5b99e]">
+              Menswear
+            </span>
+          </Link>
+          <p className="mt-5 max-w-sm text-sm leading-6 text-[#f4f1ea]/70">
+            A considered edit of everyday clothing for men. Find the pieces
+            that feel like you.
+          </p>
+          {!isAdmin && (
+            <Link
+              to="/about"
+              className="mt-5 inline-block text-[10px] font-medium uppercase tracking-[0.14em] text-[#d5c49e] underline-offset-4 hover:underline"
+            >
+              The GenZio story
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
-              The pinnacle of contemporary men’s fashion. Uniting Italian craftsmanship, high-street streetwear silhouettes, and Apple-minimalist aesthetics.
-            </p>
-
-            {/* Newsletter Input */}
-            <form onSubmit={handleSubscribe} className="space-y-3">
-              <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold block">
-                Exclusive VIP Newsletter
-              </span>
-              <div className="flex items-center glass-panel rounded-2xl p-1.5 focus-within:border-luxury-gold/60 transition-colors">
-                <input
-                  type="email"
-                  placeholder="Enter your private email..."
-                  required
-                  className="bg-transparent text-white placeholder-gray-500 text-xs px-3 py-2 focus:outline-none flex-grow"
-                />
-                <button
-                  type="submit"
-                  className="bg-luxury-gold hover:bg-luxury-goldLight text-black font-extrabold text-xs px-4 py-2.5 rounded-xl flex items-center space-x-1 transition-all duration-300 shadow-glow-gold"
-                >
-                  <span>Join</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Collections */}
-          <div>
-            <h4 className="text-white font-bold tracking-wider uppercase text-xs mb-5 text-luxury-gold">
-              Categories
-            </h4>
-            <ul className="space-y-3 font-medium">
-              <li><Link to="/clothing" className="hover:text-white transition-colors">Outerwear & Jackets</Link></li>
-              <li><Link to="/sneakers" className="hover:text-white transition-colors">Luxury Sneakers</Link></li>
-              <li><Link to="/clothing" className="hover:text-white transition-colors">Cashmere Hoodies</Link></li>
-              <li><Link to="/footwear" className="hover:text-white transition-colors">Formal Derby Shoes</Link></li>
-              <li><Link to="/sportswear" className="hover:text-white transition-colors">Kinetic Sportswear</Link></li>
-              <li><Link to="/sale" className="text-luxury-gold hover:underline">Flash Sale (Up to 40%)</Link></li>
-            </ul>
-          </div>
-
-          {/* Client Experience */}
-          <div>
-            <h4 className="text-white font-bold tracking-wider uppercase text-xs mb-5 text-luxury-gold">
-              Client Service
-            </h4>
-            <ul className="space-y-3 font-medium">
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Concierge</Link></li>
-              <li><Link to="/orders" className="hover:text-white transition-colors">Track Order</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">About the Brand</Link></li>
-              <li><Link to="/profile" className="hover:text-white transition-colors">VIP Membership</Link></li>
-              <li><a href="#size-guide" className="hover:text-white transition-colors">Size Guide & Fit</a></li>
-            </ul>
-          </div>
-
-          {/* Legal & Guarantee */}
-          <div>
-            <h4 className="text-white font-bold tracking-wider uppercase text-xs mb-5 text-luxury-gold">
-              Trust & Legal
-            </h4>
-            <ul className="space-y-3 font-medium">
-              <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Terms of Luxury Service</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Worldwide Express Delivery</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Authenticity Guarantee</a></li>
-            </ul>
-            
-            <div className="mt-6 pt-6 border-t border-white/5 space-y-2">
-              <div className="flex items-center space-x-2 text-xs text-gray-300">
-                <ShieldCheck className="w-4 h-4 text-luxury-gold" />
-                <span>100% Certified Authentic</span>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Bottom Bar & Socials */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-xs text-gray-500">
-            © {new Date().getFullYear()} AURA & NOIR Inc. All Rights Reserved. Engineered for Everyday Luxury.
-          </p>
-
-          {/* Social Icons */}
-          <div className="flex items-center space-x-4">
-            <a href="#" className="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all">
-              <Instagram className="w-4 h-4" />
-            </a>
-            <a href="#" className="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all">
-              <Twitter className="w-4 h-4" />
-            </a>
-            <a href="#" className="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all">
-              <Facebook className="w-4 h-4" />
-            </a>
-            <a href="#" className="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-luxury-gold hover:border-luxury-gold/50 transition-all">
-              <Youtube className="w-4 h-4" />
-            </a>
-          </div>
-
-          {/* Payment Badges */}
-          <div className="flex items-center space-x-3 text-xs text-gray-400">
-            <span className="px-2.5 py-1 glass-panel rounded-md text-[10px] uppercase font-bold text-gray-300">Apple Pay</span>
-            <span className="px-2.5 py-1 glass-panel rounded-md text-[10px] uppercase font-bold text-gray-300">Visa Gold</span>
-            <span className="px-2.5 py-1 glass-panel rounded-md text-[10px] uppercase font-bold text-gray-300">Mastercard</span>
-            <span className="px-2.5 py-1 glass-panel rounded-md text-[10px] uppercase font-bold text-luxury-gold">Crypto</span>
-          </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3">
+          {footerGroups.map((group) => (
+            <nav key={group.title} aria-label={group.title}>
+              <h2 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.17em] text-[#d5c49e]">
+                {group.title}
+              </h2>
+              <ul className="space-y-3">
+                {group.links.map(([label, path]) => (
+                  <li key={path}>
+                    <Link
+                      to={path}
+                      className="text-xs text-[#f4f1ea]/75 transition-colors hover:text-white"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
       </div>
-    </footer>
+
+      <div className="flex flex-col gap-5 pt-6 text-[10px] text-[#f4f1ea]/65 sm:flex-row sm:items-center sm:justify-between">
+        <p>© {new Date().getFullYear()} GenZio. All rights reserved.</p>
+        <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link to="/privacy" className="hover:text-white">
+            Privacy
+          </Link>
+          <Link to="/terms" className="hover:text-white">
+            Terms
+          </Link>
+          <Link to="/contact" className="hover:text-white">
+            Support
+          </Link>
+        </nav>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="inline-flex items-center gap-1 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d5c49e]"
+          >
+            Back to top <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </FooterContent>
+  </footer>
   );
 };

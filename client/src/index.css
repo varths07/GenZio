@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#070709] text-gray-100 transition-colors duration-300;
+    @apply bg-[#f4f1ea] text-[#20201d] antialiased;
   }
 }
 
@@ -14,16 +14,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #070709;
+  background: #f4f1ea;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262630;
+  background: #9b9a8b;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #D4AF37;
+  background: #555c45;
 }
 
 /* Luxury Glassmorphism Utilities */
@@ -77,20 +77,58 @@
 }
 html,
 body {
-  cursor: none;
-}
-input,
-textarea {
-  cursor: text !important;
-}
-button,
-a,
-div,
-span {
-  cursor: none;
+  min-width: 320px;
 }
 
-input,
-textarea {
-  cursor: text !important;
+.genzio-intro {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(66, 78, 58, 0.36), transparent 48%),
+    linear-gradient(145deg, #20291f, #101612 65%, #0d120f);
+}
+
+.genzio-intro::before {
+  position: absolute;
+  width: min(82vw, 620px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(213, 196, 158, 0.08);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.genzio-intro::after {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.12'/%3E%3C/svg%3E");
+  content: "";
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.genzio-intro-progress {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: genzio-intro-progress 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes genzio-intro-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .genzio-intro-progress {
+    animation: none;
+    transform: scaleX(1);
+  }
 }

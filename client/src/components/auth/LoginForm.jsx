@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../supabase";
@@ -23,7 +22,7 @@ export default function LoginForm() {
 
   if (authLoading || user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#f4f1ea] px-4 text-sm text-[#514b42]">
         {authLoading ? "Checking your session..." : "Redirecting..."}
       </div>
     );
@@ -37,7 +36,6 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      // 1. Sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -61,21 +59,27 @@ export default function LoginForm() {
     }
   };
 
+  const inputClassName =
+    "w-full rounded-none border border-[#cfc8ba] !bg-[#f4f1ea] px-4 py-3 !text-[#20201d] placeholder:!text-[#817b70] caret-[#20201d] outline-none focus:border-[#555c45] focus:ring-2 focus:ring-[#555c45]/20";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-center text-3xl font-bold text-gray-900">
-          Welcome Back
+    <div className="flex min-h-[70vh] items-center justify-center bg-[#f4f1ea] px-5 py-12">
+      <div className="w-full max-w-md border border-[#d7d1c6] bg-[#eeebe4] p-6 sm:p-9">
+        <p className="mb-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-[#817b70]">
+          Your GenZio account
+        </p>
+        <h1 className="mb-2 text-center font-serif text-4xl text-[#20201d]">
+          Welcome back
         </h1>
 
-        <p className="mb-6 text-center text-gray-600">
+        <p className="mb-6 text-center text-sm text-[#69655d]">
           Sign in to your GenZio account
         </p>
 
         {errorMessage && (
           <div
             role="alert"
-            className="mb-4 rounded-md bg-red-100 p-3 text-sm text-red-700"
+            className="mb-4 border border-red-200 bg-red-50 p-3 text-sm text-red-800"
           >
             {errorMessage}
           </div>
@@ -84,7 +88,7 @@ export default function LoginForm() {
         {successMessage && (
           <div
             role="status"
-            className="mb-4 rounded-md bg-green-100 p-3 text-sm text-green-700"
+            className="mb-4 border border-green-200 bg-green-50 p-3 text-sm text-green-800"
           >
             {successMessage}
           </div>
@@ -94,65 +98,77 @@ export default function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-1 block text-xs font-medium text-[#514b42]"
             >
               Email address
             </label>
 
             <input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="Enter your email"
               autoComplete="email"
               required
-              className="w-full rounded-md border border-gray-300 px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className={inputClassName}
+              style={{
+                color: "#000000",
+                WebkitTextFillColor: "#000000",
+                backgroundColor: "#ffffff",
+              }}
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-1 block text-xs font-medium text-[#514b42]"
             >
               Password
             </label>
 
             <input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter your password"
               autoComplete="current-password"
               required
-              className="w-full rounded-md border border-gray-300 px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className={inputClassName}
+              style={{
+                color: "#000000",
+                WebkitTextFillColor: "#000000",
+                backgroundColor: "#ffffff",
+              }}
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full bg-[#20201d] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#f4f1ea] transition hover:bg-[#45483b] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
         <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-sm text-gray-500">OR</span>
-          <div className="h-px flex-1 bg-gray-200" />
+          <div className="h-px flex-1 bg-[#d7d1c6]" />
+          <span className="text-xs text-[#817b70]">OR</span>
+          <div className="h-px flex-1 bg-[#d7d1c6]" />
         </div>
 
         <GoogleLoginButton />
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-[#69655d]">
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="font-semibold text-indigo-600 hover:underline"
+            className="font-semibold text-[#555c45] underline-offset-4 hover:underline"
           >
             Sign up
           </Link>

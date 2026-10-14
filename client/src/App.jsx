@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useReducedMotion } from "framer-motion";
 import { ShopProvider } from "./context/ShopContext";
 import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
+import { IntroScreen } from "./components/ui/IntroScreen";
 
-import CustomCursor from "./components/layout/CustomCursor";
 import { QuickViewModal } from "./components/products/QuickViewModal";
 import { SizeGuideModal } from "./components/products/SizeGuideModal";
 import { CartDrawer } from "./components/cart/CartDrawer";
@@ -30,6 +31,7 @@ import { Profile } from "./pages/Profile";
 import { Contact } from "./pages/Contact";
 import { About } from "./pages/About";
 import { NotFound } from "./pages/NotFound";
+import { StoreInformation } from "./pages/StoreInformation";
 
 // Admin pages
 import { AddProducts } from "./pages/admin/AddProducts.jsx";
@@ -47,15 +49,49 @@ import GoogleLoginButton from "./components/auth/GoogleLoginButton";
 // Admin route protection
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+const INTRO_STORAGE_KEY = "genzio:has-seen-intro";
+
 function App() {
+  const [showIntro, setShowIntro] = useState(() => {
+    try {
+      return window.sessionStorage.getItem(INTRO_STORAGE_KEY) !== "true";
+    } catch (error) {
+      console.warn("Unable to read the GenZio intro session state:", error);
+      return true;
+    }
+  });
+  const reduceMotion = useReducedMotion();
+  const isIntroVisible = showIntro && !reduceMotion;
+
+  useEffect(() => {
+    if (!showIntro) return;
+
+    try {
+      window.sessionStorage.setItem(INTRO_STORAGE_KEY, "true");
+    } catch (error) {
+      console.warn("Unable to save the GenZio intro session state:", error);
+    }
+
+    if (reduceMotion) {
+      setShowIntro(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setShowIntro(false), 1250);
+    return () => window.clearTimeout(timeoutId);
+  }, [reduceMotion, showIntro]);
+
   return (
     <ShopProvider>
       <Router>
-        <div className="relative min-h-screen bg-[#070709] text-gray-100 selection:bg-luxury-gold selection:text-black">
-          <CustomCursor />
+        <div
+          className="relative min-h-screen bg-[#f4f1ea] text-[#20201d] selection:bg-[#d5c49e] selection:text-[#20201d]"
+          inert={isIntroVisible ? "true" : undefined}
+          aria-hidden={isIntroVisible}
+        >
           <Navbar />
 
-          <main className="relative z-10">
+          <div className="relative z-10">
             <Routes>
               {/* Store routes */}
               <Route path="/" element={<Home />} />
@@ -88,6 +124,11 @@ function App() {
               />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
+              <Route path="/shipping" element={<StoreInformation />} />
+              <Route path="/returns" element={<StoreInformation />} />
+              <Route path="/privacy" element={<StoreInformation />} />
+              <Route path="/terms" element={<StoreInformation />} />
+              <Route path="/size-guide" element={<StoreInformation />} />
 
               {/* Protected admin routes */}
               <Route
@@ -151,7 +192,7 @@ function App() {
               {/* Fallback */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </main>
+          </div>
 
           <Footer />
 
@@ -162,6 +203,7 @@ function App() {
           <SearchModal />
           <ToastContainer />
         </div>
+        <IntroScreen isVisible={isIntroVisible} />
       </Router>
     </ShopProvider>
   );

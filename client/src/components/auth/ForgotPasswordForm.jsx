@@ -1,74 +1,96 @@
 import React, { useState } from "react";
-import { Mail, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ArrowLeft, Mail } from "lucide-react";
+import { supabase } from "../../supabase";
 
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
 
-    // Replace this with your backend API later
-    alert(`Password reset link has been sent to ${email}`);
-    setEmail("");
+    try {
+      const { error: requestError } =
+        await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+      if (requestError) throw requestError;
+      setMessage(
+        "If an account exists for this address, Supabase will send a password reset link."
+      );
+    } catch (requestError) {
+      console.error("Password reset request failed:", requestError);
+      setError(
+        requestError.message || "Unable to request a password reset right now."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#070709] flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-[#111114] border border-gray-800 rounded-3xl p-8 shadow-2xl">
-
-        <h2 className="text-3xl font-bold text-white text-center mb-2">
-          Forgot Password
-        </h2>
-
-        <p className="text-gray-400 text-center mb-8">
-          Enter your email to receive a password reset link.
+    <main className="flex min-h-[70vh] items-center justify-center bg-[#f4f1ea] px-5 py-12">
+      <section className="w-full max-w-md border border-[#d7d1c6] bg-[#eeebe4] p-6 sm:p-9">
+        <p className="mb-3 text-center text-[10px] uppercase tracking-[0.18em] text-[#817b70]">
+          Account support
+        </p>
+        <h1 className="text-center font-serif text-4xl">Forgot password?</h1>
+        <p className="mt-3 text-center text-sm leading-6 text-[#69655d]">
+          Enter your email address and we’ll request a reset link from the
+          account service.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <p role="alert" className="mt-5 border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p role="status" className="mt-5 border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            {message}
+          </p>
+        )}
 
-          <div>
-            <label className="block text-gray-300 mb-2">
-              Email Address
-            </label>
-
-            <div className="flex items-center bg-[#1b1b1f] rounded-xl px-4 border border-gray-700">
-              <Mail className="text-gray-400 w-5 h-5" />
-
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full bg-transparent p-3 text-white outline-none"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <label htmlFor="reset-email" className="block text-xs font-medium">
+            Email address
+          </label>
+          <div className="flex min-h-11 items-center gap-3 border border-[#cfc8ba] px-3">
+            <Mail className="h-4 w-4 text-[#817b70]" aria-hidden="true" />
+            <input
+              id="reset-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none"
+            />
           </div>
-
           <button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-xl transition"
+            disabled={loading}
+            className="min-h-11 w-full bg-[#20201d] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#f4f1ea] transition-colors hover:bg-[#45483b] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Send Reset Link
+            {loading ? "Requesting..." : "Request reset link"}
           </button>
-
         </form>
 
-        <div className="mt-6 text-center">
-
-          <Link
-            to="/login"
-            className="inline-flex items-center text-yellow-500 hover:text-yellow-400"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Login
-          </Link>
-
-        </div>
-
-      </div>
-    </div>
+        <Link
+          to="/login"
+          className="mt-6 inline-flex items-center text-xs font-medium text-[#555c45] underline-offset-4 hover:underline"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+          Back to sign in
+        </Link>
+      </section>
+    </main>
   );
 };
 

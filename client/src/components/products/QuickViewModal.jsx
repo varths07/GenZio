@@ -1,213 +1,237 @@
-import React, { useState } from 'react';
-import { X, Star, Heart, ShoppingBag, ShieldCheck, Truck, ArrowRight, Check } from 'lucide-react';
-import { useShop } from '../../context/ShopContext';
+import React, { useEffect, useState } from "react";
+import { Check, Heart, Ruler, ShoppingBag, X } from "lucide-react";
+import { useShop } from "../../context/ShopContext";
+
+const formatPrice = (price) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(Number(price) || 0);
 
 export const QuickViewModal = () => {
-  const { quickViewProduct, setQuickViewProduct, addToCart, toggleWishlist, isInWishlist, setIsSizeGuideOpen } = useShop();
+  const {
+    quickViewProduct,
+    setQuickViewProduct,
+    addToCart,
+    toggleWishlist,
+    isInWishlist,
+    setIsSizeGuideOpen,
+  } = useShop();
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (!quickViewProduct) return;
+    const images = quickViewProduct.images?.length
+      ? quickViewProduct.images
+      : [quickViewProduct.image_url || quickViewProduct.image].filter(Boolean);
+    setSelectedImage(images[0] || "");
+    setSelectedColor(quickViewProduct.colors?.[0] || null);
+    setSelectedSize(quickViewProduct.sizes?.[0] || "Standard");
+    setQuantity(1);
+  }, [quickViewProduct]);
+
+  useEffect(() => {
+    if (!quickViewProduct) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setQuickViewProduct(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [quickViewProduct, setQuickViewProduct]);
 
   if (!quickViewProduct) return null;
 
-  const [selectedImage, setSelectedImage] = useState(quickViewProduct.images[0]);
-  const [selectedColor, setSelectedColor] = useState(quickViewProduct.colors[0]);
-  const [selectedSize, setSelectedSize] = useState(quickViewProduct.sizes[0]);
-  const [qty, setQty] = useState(1);
+  const product = quickViewProduct;
+  const images = product.images?.length
+    ? product.images
+    : [product.image_url || product.image].filter(Boolean);
+  const colors = product.colors?.length ? product.colors : [];
+  const sizes = product.sizes?.length ? product.sizes : ["Standard"];
+  const saved = isInWishlist(product.id);
 
-  const isSaved = isInWishlist(quickViewProduct.id);
-
-  const handleAddToCart = () => {
-    addToCart(quickViewProduct, selectedColor, selectedSize, qty);
+  const handleAddToBag = () => {
+    addToCart(product, selectedColor, selectedSize, quantity);
     setQuickViewProduct(null);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md">
-      <div
-        className="relative w-full max-w-4xl glass-panel rounded-3xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 animate-in fade-in zoom-in duration-300"
-        onClick={(e) => e.stopPropagation()}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#111b13]/70 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setQuickViewProduct(null);
+      }}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-view-title"
+        className="relative grid max-h-[90vh] w-full max-w-4xl overflow-y-auto bg-[#f4f1ea] text-[#20201d] shadow-2xl md:grid-cols-2"
       >
-        {/* Close button */}
         <button
+          type="button"
           onClick={() => setQuickViewProduct(null)}
-          className="absolute top-6 right-6 p-2 rounded-full glass-panel hover:bg-white/20 text-gray-300 hover:text-white transition-colors z-20"
+          aria-label="Close quick view"
+          className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center bg-[#f4f1ea]/90 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e]"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Gallery Column */}
-          <div className="space-y-4">
-            <div className="aspect-square w-full rounded-2xl overflow-hidden bg-black/60 border border-white/10 relative">
-              <img
-                src={selectedImage}
-                alt={quickViewProduct.name}
-                className="w-full h-full object-cover object-center"
-              />
-              {quickViewProduct.isFlashSale && (
-                <span className="absolute top-4 left-4 bg-luxury-gold text-black font-extrabold text-xs px-3 py-1 rounded-md shadow-glow-gold">
-                  Flash Sale -{quickViewProduct.discountPercent}%
-                </span>
-              )}
-            </div>
+        <div className="min-h-64 bg-[#e8e4dc]">
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt={product.name}
+              className="h-full max-h-[70vh] w-full object-cover"
+            />
+          )}
+        </div>
 
-            {/* Thumbnail Carousel */}
-            <div className="flex space-x-3 overflow-x-auto pb-2">
-              {quickViewProduct.images.map((img, idx) => (
+        <div className="flex flex-col p-5 sm:p-8">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#817b70]">
+            {product.subCategory || product.category}
+            {product.isDemo && " · Demo"}
+          </p>
+          <h2 id="quick-view-title" className="mt-2 pr-8 font-serif text-3xl">
+            {product.name}
+          </h2>
+          <p className="mt-3 text-lg">{formatPrice(product.price)}</p>
+          <p className="mt-3 text-sm leading-6 text-[#69655d]">
+            {product.description || "Explore this piece from the GenZio edit."}
+          </p>
+
+          {images.length > 1 && (
+            <div className="mt-4 flex gap-2 overflow-x-auto">
+              {images.map((image, index) => (
                 <button
-                  key={idx}
-                  onClick={() => setSelectedImage(img)}
-                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ₹{
-                    selectedImage === img ? 'border-luxury-gold shadow-glow-gold' : 'border-white/10 opacity-60 hover:opacity-100'
+                  type="button"
+                  key={`${image}-${index}`}
+                  onClick={() => setSelectedImage(image)}
+                  aria-label={`View product image ${index + 1}`}
+                  aria-pressed={selectedImage === image}
+                  className={`h-14 w-12 shrink-0 overflow-hidden border-2 ${
+                    selectedImage === image
+                      ? "border-[#555c45]"
+                      : "border-transparent"
                   }`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={image} alt="" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
-          </div>
+          )}
 
-          {/* Product Details Column */}
-          <div className="flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs text-luxury-gold font-semibold uppercase tracking-widest">
-                <span>{quickViewProduct.category} &bull; {quickViewProduct.subCategory}</span>
-                <div className="flex items-center space-x-1 text-white">
-                  <Star className="w-4 h-4 fill-luxury-gold text-luxury-gold" />
-                  <span>{quickViewProduct.rating} ({quickViewProduct.reviewsCount} reviews)</span>
-                </div>
-              </div>
-
-              <h2 className="text-2xl font-extrabold text-white tracking-tight leading-snug">
-                {quickViewProduct.name}
-              </h2>
-
-              {/* Price */}
-              <div className="flex items-baseline space-x-3">
-                <span className="text-3xl font-black text-white">₹{quickViewProduct.price}</span>
-                {quickViewProduct.originalPrice && (
-                  <span className="text-lg text-gray-500 line-through">₹{quickViewProduct.originalPrice}</span>
-                )}
-                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                  In Stock ({quickViewProduct.stockCount} left)
-                </span>
-              </div>
-
-              <p className="text-gray-300 text-sm leading-relaxed border-t border-b border-white/10 py-3">
-                {quickViewProduct.description}
-              </p>
-
-              {/* Color Selection */}
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">
-                  Select Color: <span className="text-white">{selectedColor.name}</span>
-                </label>
-                <div className="flex space-x-3">
-                  {quickViewProduct.colors.map((c) => (
-                    <button
-                      key={c.name}
-                      onClick={() => setSelectedColor(c)}
-                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ₹{
-                        selectedColor.name === c.name ? 'border-luxury-gold scale-110 shadow-glow-gold' : 'border-transparent opacity-70 hover:opacity-100'
-                      }`}
-                      style={{ backgroundColor: c.hex }}
-                      title={c.name}
-                    >
-                      {selectedColor.name === c.name && (
-                        <Check className={`w-3.5 h-3.5 ₹{c.hex === '#FFFFFF' ? 'text-black' : 'text-white'}`} />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Size Selection */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Select Size
-                  </label>
+          {colors.length > 0 && (
+            <fieldset className="mt-5">
+              <legend className="text-[10px] font-semibold uppercase tracking-[0.12em]">
+                Colour — {selectedColor?.name}
+              </legend>
+              <div className="mt-2 flex gap-2">
+                {colors.map((color) => (
                   <button
-                    onClick={() => setIsSizeGuideOpen(true)}
-                    className="text-xs text-luxury-gold underline hover:text-white transition-colors"
+                    type="button"
+                    key={color.name}
+                    onClick={() => setSelectedColor(color)}
+                    aria-label={color.name}
+                    aria-pressed={selectedColor?.name === color.name}
+                    className={`grid h-8 w-8 place-items-center rounded-full border ${
+                      selectedColor?.name === color.name
+                        ? "border-[#20201d] ring-1 ring-[#20201d]"
+                        : "border-[#cfc8ba]"
+                    }`}
+                    style={{ backgroundColor: color.hex || "#76766b" }}
                   >
-                    Size Guide
+                    {selectedColor?.name === color.name && (
+                      <Check className="h-3 w-3 text-white drop-shadow" />
+                    )}
                   </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {quickViewProduct.sizes.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSelectedSize(s)}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
-                        selectedSize === s
-                          ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.5)]"
-                          : "bg-white/5 text-gray-300 border-white/10 hover:border-white/30"
-                      }`}
-                      
-                      
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
+            </fieldset>
+          )}
+
+          <fieldset className="mt-5">
+            <div className="flex items-center justify-between">
+              <legend className="text-[10px] font-semibold uppercase tracking-[0.12em]">
+                Size
+              </legend>
+              <button
+                type="button"
+                onClick={() => setIsSizeGuideOpen(true)}
+                className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.1em] text-[#6c7057] underline underline-offset-4"
+              >
+                <Ruler className="h-3 w-3" /> Size guide
+              </button>
             </div>
-
-            {/* Actions */}
-            <div className="space-y-3 pt-4 border-t border-white/10">
-              <div className="flex items-center space-x-4">
-                {/* Quantity */}
-                <div className="flex items-center glass-panel rounded-xl px-3 py-2 border border-white/10 space-x-3">
-                  <button
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="text-gray-400 hover:text-white font-bold text-base px-1"
-                  >
-                    -
-                  </button>
-                  <span className="text-white font-bold text-sm">{qty}</span>
-                  <button
-                    onClick={() => setQty((q) => q + 1)}
-                    className="text-gray-400 hover:text-white font-bold text-base px-1"
-                  >
-                    +
-                  </button>
-                </div>
-
-                {/* Add to Cart CTA */}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {sizes.map((size) => (
                 <button
-                  onClick={handleAddToCart}
-                  className="flex-1 bg-gradient-to-r from-luxury-goldDark via-luxury-gold to-luxury-goldLight text-black font-extrabold text-sm py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2 shadow-glow-gold hover:opacity-95 transition-all"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Bag &bull; ₹{(quickViewProduct.price * qty).toFixed(0)}</span>
-                </button>
-
-                {/* Wishlist Button */}
-                <button
-                  onClick={() => toggleWishlist(quickViewProduct)}
-                  className={`p-3.5 rounded-xl glass-panel transition-all ₹{
-                    isSaved ? 'text-rose-500 border-rose-500/50 bg-rose-500/10' : 'text-gray-300 hover:text-white'
+                  type="button"
+                  key={size}
+                  onClick={() => setSelectedSize(size)}
+                  aria-pressed={selectedSize === size}
+                  className={`min-h-9 min-w-10 border px-3 text-xs ${
+                    selectedSize === size
+                      ? "border-[#20201d] bg-[#20201d] text-[#f4f1ea]"
+                      : "border-[#cfc8ba]"
                   }`}
                 >
-                  <Heart className={`w-5 h-5 ₹{isSaved ? 'fill-current' : ''}`} />
+                  {size}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="mt-auto pt-6">
+            <div className="mb-3 flex items-center gap-4">
+              <div className="flex h-10 items-center border border-[#cfc8ba]">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                  aria-label="Decrease quantity"
+                  className="h-9 w-9"
+                >
+                  −
+                </button>
+                <span className="min-w-6 text-center text-sm">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((value) => value + 1)}
+                  aria-label="Increase quantity"
+                  className="h-9 w-9"
+                >
+                  +
                 </button>
               </div>
-
-              <div className="flex items-center justify-between text-xs text-gray-400 pt-2">
-                <span className="flex items-center space-x-1">
-                  <Truck className="w-3.5 h-3.5 text-luxury-gold" />
-                  <span>Free Express Global Shipping</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-luxury-gold" />
-                  <span>Authenticity Guaranteed</span>
-                </span>
-              </div>
+              <button
+                type="button"
+                onClick={() => toggleWishlist(product)}
+                aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
+                aria-pressed={saved}
+                className="grid h-10 w-10 place-items-center border border-[#cfc8ba]"
+              >
+                <Heart className={`h-4 w-4 ${saved ? "fill-current text-[#914d40]" : ""}`} />
+              </button>
             </div>
-
+            <button
+              type="button"
+              onClick={handleAddToBag}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-[#20201d] px-5 text-xs font-semibold uppercase tracking-[0.12em] text-[#f4f1ea] transition-colors hover:bg-[#45483b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e]"
+            >
+              <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+              Add to bag · {formatPrice(Number(product.price) * quantity)}
+            </button>
+            {product.isDemo && (
+              <p className="mt-2 text-center text-[10px] leading-4 text-[#817b70]">
+                Demo item for preview; checkout is unavailable.
+              </p>
+            )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

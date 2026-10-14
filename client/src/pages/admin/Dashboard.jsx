@@ -80,7 +80,7 @@ export const AdminDashboard = () => {
               <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
                 <div
                   className="w-full bg-gradient-to-t from-luxury-goldDark to-luxury-gold rounded-xl group-hover:brightness-125 transition-all shadow-glow-gold"
-                  style={{ height: `₹{(bar.val / 150) * 100}%` }}
+                  style={{ height: `${(bar.val / 150) * 100}%` }}
                 />
                 <span className="text-[10px] text-gray-400 font-bold">{bar.month}</span>
               </div>

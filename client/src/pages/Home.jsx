@@ -1,388 +1,520 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, ShieldCheck, Flame, Star, Clock, Zap, Award, ChevronRight } from 'lucide-react';
-import { FigmaMotionBackground } from '../components/home/FigmaMotionBackground';
-import { ProductCard } from '../components/products/ProductCard';
+import { ArrowRight, ArrowUpRight, Heart, ShoppingBag } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { Reveal } from '../components/ui/Reveal';
 
-export const Home = () => {
-  const { products } = useShop();
+const heroImage =
+  'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=2200&q=85';
 
-  // Filter specific showcases
-  const trendingProducts = products.filter((p) => p.isTrending);
-  const newArrivals = products.filter((p) => p.isNew);
-  const bestSellers = products.filter((p) => p.isBestSeller);
-  const flashSaleProducts = products.filter((p) => p.isFlashSale);
-  const sneakersShowcase = products.filter((p) => p.subCategory === 'Sneakers' || p.subCategory === 'Running Shoes');
-  const formalShoesShowcase = products.filter((p) => p.subCategory === 'Formal Shoes' || p.subCategory === 'Boots');
+const getProductImage = (product) =>
+  product.image_url || product.image || product.images?.[0] || '';
 
-  // Flash Sale Countdown Timer (Hours, Mins, Secs)
-  const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 32, seconds: 45 });
+const getCategoryPath = (category = '') => {
+  const normalizedCategory = category.toLowerCase();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return { hours: 24, minutes: 0, seconds: 0 };
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  if (normalizedCategory.includes('foot')) return '/footwear';
+  if (normalizedCategory.includes('sport')) return '/sportswear';
+  return '/clothing';
+};
+
+const formatPrice = (price) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(Number(price) || 0);
+
+const HomeProduct = ({ product, addToCart, toggleWishlist, isInWishlist }) => {
+  const saved = isInWishlist(product.id);
+  const image = getProductImage(product);
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div className="relative min-h-screen bg-[#070709] text-white overflow-hidden">
-      
-      {/* Figma Motion Background */}
-      <FigmaMotionBackground />
-
-      {/* Hero Section */}
-      <section className="relative min-h-screen pt-32 pb-20 flex items-center justify-center z-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Left Text Column */}
-          <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
-            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full glass-panel-gold border border-luxury-gold/40 text-luxury-gold text-xs font-bold uppercase tracking-widest shadow-glow-gold animate-pulse-slow">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Haute Couture 2026 Collection</span>
-            </div>
-
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-none">
-              <span className="text-white block">ELEVATE</span>
-              <span className="text-gold-gradient block mt-1">YOUR STYLE</span>
-            </h1>
-
-            <p className="text-lg sm:text-xl text-gray-300 max-w-2xl font-normal leading-relaxed mx-auto lg:mx-0">
-              Discover premium men's fashion designed for confidence, comfort, and everyday luxury.
-              Architectural tailoring, rare Italian cashmere, and kinetic footwear aesthetics.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-              <Link
-                to="/shop"
-                className="w-full sm:w-auto bg-gradient-to-r from-luxury-goldDark via-luxury-gold to-luxury-goldLight text-black font-extrabold text-sm px-9 py-4 rounded-2xl flex items-center justify-center space-x-3 shadow-glow-gold hover:scale-105 transition-all duration-300"
-              >
-                <span>Shop Now</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/clothing"
-                className="w-full sm:w-auto glass-panel hover:bg-white/10 text-white font-extrabold text-sm px-9 py-4 rounded-2xl flex items-center justify-center space-x-2 border border-white/20 hover:border-luxury-gold/50 transition-all duration-300"
-              >
-                <span>Explore Collection</span>
-              </Link>
-            </div>
-
-            {/* Micro Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 max-w-lg mx-auto lg:mx-0">
-              <div>
-                <span className="text-2xl sm:text-3xl font-black text-white block">100%</span>
-                <span className="text-xs text-gray-400 font-medium">Italian Leather</span>
-              </div>
-              <div>
-                <span className="text-2xl sm:text-3xl font-black text-luxury-gold block">24H</span>
-                <span className="text-xs text-gray-400 font-medium">Express Dispatch</span>
-              </div>
-              <div>
-                <span className="text-2xl sm:text-3xl font-black text-white block">4.9★</span>
-                <span className="text-xs text-gray-400 font-medium">Verified Buyers</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Floating Fashion Model & Sneaker Feature Card */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
-              
-              {/* Outer Glow Halo */}
-              <div className="absolute -inset-4 bg-gradient-to-tr from-luxury-gold/30 to-sky-500/20 rounded-3xl blur-2xl opacity-60 animate-pulse-slow" />
-              
-              {/* Main Model Image Card */}
-              <div className="relative aspect-[4/5] rounded-3xl overflow-hidden glass-panel border border-white/20 shadow-2xl group">
-                <img
-                  src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=1200&q=80"
-                  alt="Men's Fashion Model"
-                  className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-transparent to-transparent opacity-80" />
-
-                {/* Overlaid Floating Sneaker Widget */}
-                <div className="absolute bottom-6 left-6 right-6 glass-panel-gold rounded-2xl p-4 border border-luxury-gold/40 flex items-center space-x-4 shadow-luxury animate-float">
-                  <img
-                    src="https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=300&q=80"
-                    alt="AURA VORTEX 900"
-                    className="w-16 h-16 object-cover rounded-xl bg-black/60 border border-luxury-gold/30"
-                  />
-                  <div className="flex-1">
-                    <span className="text-[10px] uppercase font-bold text-luxury-gold tracking-widest block">Featured Luxury Footwear</span>
-                    <h4 className="text-xs font-extrabold text-white">AURA VORTEX 900 MATRIX</h4>
-                    <span className="text-sm font-black text-white">₹340</span>
-                  </div>
-                  <Link
-                    to="/sneakers"
-                    className="p-2.5 rounded-xl bg-luxury-gold text-black hover:bg-white transition-colors"
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* Featured Collections Showcase */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-luxury-gold">
-            Curated Categories
+    <motion.article
+      className="group min-w-0"
+      whileHover={reduceMotion ? undefined : { y: -3 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#e8e4dc]">
+        <Link to={`/product/${product.id}`} aria-label={`View ${product.name}`}>
+          <img
+            src={image}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+          />
+        </Link>
+        <button
+          type="button"
+          onClick={() => toggleWishlist(product)}
+          aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+          aria-pressed={saved}
+          className="absolute right-3 top-3 grid h-10 w-10 place-items-center bg-[#f5f2eb]/95 text-[#20201d] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e] active:scale-90 active:transition-transform"
+        >
+          <Heart className={`h-[17px] w-[17px] ${saved ? 'fill-current text-[#914d40]' : ''}`} />
+        </button>
+        {product.isDemo && (
+          <span className="absolute left-3 top-3 bg-[#f5f2eb]/95 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#514b42]">
+            Demo
           </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            FEATURED COLLECTIONS
-          </h2>
-          <p className="text-gray-400 text-sm max-w-xl mx-auto">
-            From cashmere hoodies to Italian leather boots, explore our signature menswear ranges.
+        )}
+        <button
+          type="button"
+          onClick={() => addToCart(product)}
+          className="absolute bottom-3 left-3 right-3 flex min-h-11 items-center justify-between bg-[#f5f2eb] px-4 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#20201d] opacity-100 transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e] active:scale-[0.98] sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 sm:group-focus-within:translate-y-0 sm:group-focus-within:opacity-100"
+        >
+          <span>Add to bag</span>
+          <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="flex items-start justify-between gap-3 pt-4">
+        <div className="min-w-0">
+          <p className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#77736c]">
+            {product.subCategory || product.category}
           </p>
+          <Link
+            to={`/product/${product.id}`}
+            className="inline-block text-sm font-medium leading-snug text-[#20201d] transition-colors hover:text-[#8c6b3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e]"
+          >
+            {product.name}
+          </Link>
         </div>
+        <span className="shrink-0 pt-5 text-sm text-[#20201d]">{formatPrice(product.price)}</span>
+      </div>
+    </motion.article>
+  );
+};
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              title: "Luxury Outerwear",
-              subtitle: "Jackets & Blazers",
-              img: "https://images.unsplash.com/photo-1521223890158-f9f7c3d5d504?auto=format&fit=crop&w=800&q=80",
-              link: "/clothing"
-            },
-            {
-              title: "High-Street Hoodies",
-              subtitle: "Mongolian Cashmere",
-              img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
-              link: "/clothing"
-            },
-            {
-              title: "Kinetic Footwear",
-              subtitle: "Sneakers & Runners",
-              img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
-              link: "/sneakers"
-            },
-            {
-              title: "Heritage Boots",
-              subtitle: "Italian Suede & Leather",
-              img: "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&w=800&q=80",
-              link: "/footwear"
-            }
-          ].map((col, i) => (
+export const Home = () => {
+  const {
+    products,
+    storefrontProducts,
+    addToCart,
+    toggleWishlist,
+    isInWishlist,
+  } = useShop();
+  const reduceMotion = useReducedMotion();
+  const canObserve = typeof IntersectionObserver !== 'undefined';
+
+  const catalogProducts = [...storefrontProducts].sort((first, second) => {
+    if (Boolean(first.isDemo) !== Boolean(second.isDemo)) {
+      return first.isDemo ? 1 : -1;
+    }
+    return new Date(second.created_at || 0) - new Date(first.created_at || 0);
+  });
+
+  const categoryProducts = Array.from(
+    catalogProducts.reduce((groups, product) => {
+      const title = product.subCategory || product.category;
+      if (title && !groups.has(title)) groups.set(title, product);
+      return groups;
+    }, new Map())
+  ).slice(0, 4);
+
+  const newArrivals = catalogProducts
+    .filter((product) => product.isNew || product.isDemo)
+    .slice(0, 4);
+  const newArrivalIds = new Set(newArrivals.map((product) => product.id));
+  const moreToExplore = catalogProducts
+    .filter((product) => !newArrivalIds.has(product.id))
+    .slice(0, 4);
+  const editorialProduct = catalogProducts[4] || catalogProducts[0];
+  const bestSellers = products
+    .filter((product) => product.isBestSeller)
+    .slice(0, 4);
+  const currentOffers = products
+    .filter((product) => product.isFlashSale && Number(product.discountPercent) > 0)
+    .slice(0, 4);
+
+  return (
+    <main className="overflow-x-clip bg-[#f4f1ea] text-[#20201d]">
+      <section className="relative isolate flex min-h-[100svh] items-end bg-[#171714] text-[#f4f1ea]">
+        <motion.img
+          src={heroImage}
+          alt="Men's contemporary fashion editorial"
+          fetchpriority="high"
+          decoding="async"
+          className="absolute inset-0 z-0 h-full w-full object-cover object-[56%_center]"
+          initial={reduceMotion || !canObserve ? false : { scale: 1.035, opacity: 1 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: reduceMotion ? 0 : 1.4, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/65 via-black/20 to-transparent" />
+        <motion.div
+          className="relative z-20 mx-auto w-full max-w-[1600px] px-5 pb-16 pt-36 sm:px-10 sm:pb-20 lg:px-[8vw] lg:pb-[9vh]"
+          initial={reduceMotion || !canObserve ? false : { opacity: 1, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.75, delay: reduceMotion ? 0 : 0.12, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.24em] text-white/80 sm:text-xs">
+            GenZio / Menswear
+          </p>
+          <h1 className="max-w-3xl font-serif text-5xl leading-[0.98] sm:text-7xl lg:text-[6.5rem]">
+            Dress like
+            <br />
+            <span className="italic">yourself.</span>
+          </h1>
+          <div className="mt-7 flex max-w-xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <p className="max-w-sm text-sm leading-6 text-white/80 sm:text-base">
+              Everyday menswear with a point of view. Find the pieces you will reach for again.
+            </p>
             <Link
-              key={i}
-              to={col.link}
-              className="group relative aspect-[3/4] rounded-3xl overflow-hidden glass-panel border border-white/10 hover:border-luxury-gold/40 transition-all duration-500 hover:-translate-y-2 shadow-luxury"
+              to="/shop"
+              className="inline-flex min-h-12 w-fit items-center gap-5 border border-white/70 px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white hover:text-[#20201d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             >
-              <img
-                src={col.img}
-                alt={col.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 space-y-1">
-                <span className="text-[10px] uppercase font-bold text-luxury-gold tracking-widest block">{col.subtitle}</span>
-                <h3 className="text-xl font-bold text-white group-hover:text-luxury-gold transition-colors">{col.title}</h3>
-                <div className="flex items-center space-x-1 text-xs text-gray-300 font-semibold pt-1">
-                  <span>Explore Now</span>
-                  <ChevronRight className="w-4 h-4 text-luxury-gold group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
+              Explore the collection
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-          ))}
-        </div>
+          </div>
+        </motion.div>
+        <span className="absolute bottom-7 right-6 z-20 hidden text-[10px] uppercase tracking-[0.2em] text-white/70 md:block lg:right-[8vw]">
+          Clothing for men
+        </span>
       </section>
 
-      {/* Trending Now */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+      <section className="mx-auto grid max-w-[1600px] gap-5 px-5 py-16 sm:px-10 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-end lg:gap-14 lg:px-[8vw]">
+        <Reveal>
           <div>
-            <div className="flex items-center space-x-2 text-luxury-gold text-xs font-bold uppercase tracking-widest mb-2">
-              <Flame className="w-4 h-4 fill-luxury-gold" />
-              <span>High Demand</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              TRENDING NOW
+            <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
+              A note from GenZio
+            </p>
+            <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+              Less noise.
+              <br />
+              More you.
             </h2>
           </div>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <p className="max-w-2xl text-sm leading-7 text-[#69655d] sm:text-base">
+            GenZio is a focused edit of menswear made for the way you live now:
+            simple pieces, considered proportions and room to make each look your
+            own.
+          </p>
+        </Reveal>
+      </section>
+
+      <section id="collections" className="mx-auto max-w-[1600px] px-5 py-20 sm:px-10 sm:py-28 lg:px-[8vw]">
+        <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
+          <Reveal>
+            <div>
+              <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
+                The GenZio edit
+              </p>
+              <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+                Find your everyday
+              </h2>
+            </div>
+          </Reveal>
           <Link
             to="/shop"
-            className="inline-flex items-center space-x-2 text-xs font-extrabold text-luxury-gold hover:text-white uppercase tracking-wider transition-colors"
+            className="hidden items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-[0.13em] text-[#45423c] transition-colors hover:text-[#8c6b3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8c6b3e] sm:inline-flex"
           >
-            <span>View All Trending</span>
-            <ArrowRight className="w-4 h-4" />
+            All collections <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {trendingProducts.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        {categoryProducts.length > 0 ? (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
+            {categoryProducts.map(([title, product], index) => (
+              <Reveal
+                key={title}
+                delay={index * 0.07}
+                className={index === 0 ? "col-span-2 lg:col-span-1" : ""}
+              >
+                <Link
+                  to={getCategoryPath(product.category)}
+                  className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8c6b3e]"
+                >
+                  <div className={`overflow-hidden bg-[#e8e4dc] ${index === 0 ? 'aspect-[1.18/1] lg:aspect-[4/5]' : 'aspect-[4/5]'}`}>
+                    <img
+                      src={getProductImage(product)}
+                      alt={`${title} from the GenZio men's collection`}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-2 pt-3">
+                    <span className="text-sm font-medium sm:text-base">{title}</span>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-[#817b70] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <p className="border-y border-[#d7d1c6] py-8 text-sm text-[#77736c]">
+            The collection will appear here when products are available.
+          </p>
+        )}
+      </section>
+
+      <section className="border-y border-[#ded9cf] bg-[#eeebe4]">
+        <div className="mx-auto grid max-w-[1600px] lg:grid-cols-2">
+          <Reveal className="flex min-h-[48svh] flex-col justify-center px-5 py-14 sm:px-10 sm:py-20 lg:min-h-[78svh] lg:px-[8vw]">
+            <p className="mb-4 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
+              Considered, not complicated
+            </p>
+            <h2 className="max-w-lg font-serif text-4xl leading-[1.08] sm:text-5xl">
+              A good fit for the days that make you.
+            </h2>
+            <p className="mt-5 max-w-md text-sm leading-6 text-[#69655d]">
+              T-shirts, shirts, denim and more. Build a wardrobe around what feels like you.
+            </p>
+            <Link
+              to="/clothing"
+              className="mt-8 inline-flex w-fit items-center gap-3 border-b border-[#20201d] pb-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:border-[#8c6b3e] hover:text-[#8c6b3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8c6b3e]"
+            >
+              Shop menswear <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Reveal>
+          <Reveal>
+            <div className="group relative min-h-[48svh] overflow-hidden bg-[#d8d3c9] sm:min-h-[68svh] lg:min-h-[78svh]">
+              {editorialProduct ? (
+                <img
+                  src={getProductImage(editorialProduct)}
+                  alt={editorialProduct.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <img
+                  src={heroImage}
+                  alt="Men's contemporary fashion editorial"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover object-[56%_center]"
+                />
+              )}
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Flash Sale Banner Section */}
-      <section className="relative z-10 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="glass-panel-gold rounded-3xl p-8 sm:p-12 border border-luxury-gold/40 relative overflow-hidden shadow-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-            <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center space-x-2 bg-luxury-gold text-black font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow-glow-gold">
-                <Zap className="w-3.5 h-3.5 fill-black" />
-                <span>Limited Time Offer</span>
-              </div>
-              
-              <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
-                FLASH SALE <span className="text-luxury-gold">&bull; UP TO 40% OFF</span>
-              </h2>
-              <p className="text-gray-300 text-sm max-w-lg">
-                Exclusive discounts on selected cashmere hoodies, leather biker jackets, and performance running sneakers. Claim your piece before stock expires.
+      <section id="new-arrivals" className="mx-auto max-w-[1600px] px-5 py-20 sm:px-10 sm:py-28 lg:px-[8vw]">
+        <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
+          <Reveal>
+            <div>
+              <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
+                Just added
               </p>
-
-              {/* Countdown Timer */}
-              <div className="flex items-center space-x-4 pt-2">
-                {[
-                  { label: "Hours", val: timeLeft.hours },
-                  { label: "Minutes", val: timeLeft.minutes },
-                  { label: "Seconds", val: timeLeft.seconds }
-                ].map((t, idx) => (
-                  <div key={idx} className="glass-panel rounded-2xl p-3 w-20 text-center border border-luxury-gold/30">
-                    <span className="text-2xl font-black text-white block">{String(t.val).padStart(2, '0')}</span>
-                    <span className="text-[10px] text-luxury-gold uppercase font-bold tracking-wider">{t.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4">
-                <Link
-                  to="/sale"
-                  className="inline-flex items-center space-x-2 bg-luxury-gold text-black font-extrabold text-sm px-8 py-3.5 rounded-xl shadow-glow-gold hover:bg-white transition-all"
-                >
-                  <span>Shop Flash Sale</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+              <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+                New arrivals
+              </h2>
             </div>
+          </Reveal>
+          <Link
+            to="/new-arrivals"
+            className="hidden items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-[0.13em] text-[#45423c] transition-colors hover:text-[#8c6b3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8c6b3e] sm:inline-flex"
+          >
+            View all <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
 
-            <div className="lg:col-span-5 grid grid-cols-2 gap-4">
-              {flashSaleProducts.slice(0, 2).map((p) => (
-                <div key={p.id} className="glass-panel rounded-2xl p-3 border border-white/10">
-                  <img src={p.images[0]} alt={p.name} className="w-full aspect-square object-cover rounded-xl mb-2" />
-                  <h4 className="text-xs font-bold text-white line-clamp-1">{p.name}</h4>
-                  <div className="flex items-baseline space-x-2">
-                    <span className="text-sm font-black text-luxury-gold">₹{p.price}</span>
-                    <span className="text-xs text-gray-500 line-through">₹{p.originalPrice}</span>
-                  </div>
+        {newArrivals.length > 0 ? (
+          <div
+            role="region"
+            aria-label="New arrival products"
+            tabIndex={0}
+            className="-mx-5 flex snap-x snap-mandatory gap-x-4 overflow-x-auto overscroll-x-contain px-5 pb-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e] sm:gap-x-5 md:mx-0 md:overflow-visible md:px-0 md:pb-0"
+          >
+            {newArrivals.map((product, index) => (
+              <Reveal
+                key={product.id}
+                delay={index * 0.07}
+                className="w-[78vw] shrink-0 snap-start sm:w-[40vw] md:w-auto md:flex-1 md:snap-none"
+              >
+                <HomeProduct
+                  product={product}
+                  addToCart={addToCart}
+                  toggleWishlist={toggleWishlist}
+                  isInWishlist={isInWishlist}
+                />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <p className="border-y border-[#d7d1c6] py-8 text-sm text-[#77736c]">
+            New arrivals will appear here when products are available.
+          </p>
+        )}
+      </section>
+
+      {moreToExplore.length > 0 && (
+        <section className="bg-[#24241f] text-[#f4f1ea]">
+          <div className="mx-auto max-w-[1600px] px-5 py-20 sm:px-10 sm:py-28 lg:px-[8vw]">
+            <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
+              <Reveal>
+                <div>
+                  <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-white/55">
+                    More to explore
+                  </p>
+                  <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+                    The rest of the edit
+                  </h2>
                 </div>
+              </Reveal>
+              <Link
+                to="/shop"
+                className="hidden items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-[0.13em] text-white/75 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:inline-flex"
+              >
+                Shop all <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
+              {moreToExplore.map((product, index) => (
+                <Reveal key={product.id} delay={index * 0.07}>
+                  <HomeProduct
+                    product={product}
+                    addToCart={addToCart}
+                    toggleWishlist={toggleWishlist}
+                    isInWishlist={isInWishlist}
+                  />
+                </Reveal>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* New Arrivals & Best Sellers Grid */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-luxury-gold">
-            New Season Drop
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            NEW ARRIVALS
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {newArrivals.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
-
-      {/* Footwear Spotlight Section */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-luxury-gold block mb-2">
-              Footwear Atelier
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              PREMIUM SNEAKERS & SHOES
-            </h2>
-          </div>
-          <Link
-            to="/sneakers"
-            className="inline-flex items-center space-x-2 text-xs font-extrabold text-luxury-gold hover:text-white uppercase tracking-wider transition-colors"
-          >
-            <span>Explore All Footwear</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {sneakersShowcase.concat(formalShoesShowcase).slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials / Customer Reviews */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-luxury-gold">
-            Client Distinction
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            WHAT OUR CLIENTS SAY
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              quote: "The cashmere quality of the oversized hoodie easily rivals Savile Row fashion houses. The gold drawer tips and weight are extraordinary.",
-              author: "Dominic Sterling",
-              role: "Creative Director & Verified Buyer",
-              rating: 5
-            },
-            {
-              quote: "AURA VORTEX sneakers are the most comfortable hybrid running shoes I have owned. Sleek enough for Paris Fashion Week, durable for daily wear.",
-              author: "Marcus Thorne",
-              role: "Architect & Sneaker Collector",
-              rating: 5
-            },
-            {
-              quote: "Customer concierge and packaging arrived in custom obsidian velvet boxes. Pure 5-star luxury experience from purchase to delivery.",
-              author: "Alexander Rothschild",
-              role: "Venture Partner",
-              rating: 5
-            }
-          ].map((rev, idx) => (
-            <div key={idx} className="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex space-x-1 text-luxury-gold">
-                  {Array.from({ length: rev.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-300 text-sm italic leading-relaxed">
-                  "{rev.quote}"
+      {bestSellers.length > 0 && (
+        <section className="mx-auto max-w-[1600px] px-5 py-20 sm:px-10 sm:py-28 lg:px-[8vw]">
+          <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
+            <Reveal>
+              <div>
+                <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
+                  The collection
                 </p>
+                <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+                  Best sellers
+                </h2>
               </div>
-              <div className="pt-4 border-t border-white/5">
-                <h4 className="text-sm font-bold text-white">{rev.author}</h4>
-                <span className="text-xs text-luxury-gold">{rev.role}</span>
-              </div>
+            </Reveal>
+            <Link
+              to="/shop"
+              className="hidden items-center gap-2 text-xs font-semibold uppercase tracking-[0.13em] text-[#45423c] hover:text-[#8c6b3e] sm:inline-flex"
+            >
+              Shop all <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
+            {bestSellers.map((product, index) => (
+              <Reveal key={product.id} delay={index * 0.07}>
+                <HomeProduct
+                  product={product}
+                  addToCart={addToCart}
+                  toggleWishlist={toggleWishlist}
+                  isInWishlist={isInWishlist}
+                />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {currentOffers.length > 0 && (
+        <section className="bg-[#24241f] text-[#f4f1ea]">
+          <div className="mx-auto max-w-[1600px] px-5 py-16 sm:px-10 sm:py-20 lg:px-[8vw]">
+            <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
+              <Reveal>
+                <div>
+                  <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-white/55">
+                    Current offers
+                  </p>
+                  <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+                    A little extra
+                  </h2>
+                </div>
+              </Reveal>
+              <Link
+                to="/sale"
+                className="hidden items-center gap-2 text-xs font-semibold uppercase tracking-[0.13em] text-white/75 hover:text-white sm:inline-flex"
+              >
+                View offers <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </div>
-          ))}
-        </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
+              {currentOffers.map((product, index) => (
+                <Reveal key={product.id} delay={index * 0.07}>
+                  <HomeProduct
+                    product={product}
+                    addToCart={addToCart}
+                    toggleWishlist={toggleWishlist}
+                    isInWishlist={isInWishlist}
+                  />
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="mx-auto grid max-w-[1600px] gap-8 px-5 py-20 sm:px-10 sm:py-28 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-[8vw]">
+        <Reveal>
+          <div className="group relative aspect-[4/3] overflow-hidden bg-[#e8e4dc]">
+            <img
+              src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=1400&q=85"
+              alt="Men's contemporary clothing in a relaxed editorial setting"
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <div>
+            <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
+              The GenZio approach
+            </p>
+            <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+              A wardrobe, on your terms.
+            </h2>
+            <p className="mt-5 max-w-lg text-sm leading-7 text-[#69655d]">
+              Start with a tee, add a layer, or build a look around the pieces
+              you already love. Explore our men’s edit at your own pace.
+            </p>
+            <Link
+              to="/about"
+              className="mt-8 inline-flex items-center gap-3 border-b border-[#20201d] pb-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:border-[#8c6b3e] hover:text-[#8c6b3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8c6b3e]"
+            >
+              About GenZio <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </Reveal>
       </section>
 
-    </div>
+      <section className="border-y border-[#ded9cf] bg-[#eeebe4]">
+        <div className="mx-auto max-w-[1600px] px-5 py-16 sm:px-10 sm:py-20 lg:px-[8vw]">
+          <Reveal className="mb-10 max-w-xl">
+            <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
+              Shopping, made simple
+            </p>
+            <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
+              Made for a better browse.
+            </h2>
+          </Reveal>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["A focused edit", "Men's clothing and footwear, all in one place."],
+              ["Find your fit", "See available sizes on each product page."],
+              ["Save for later", "Keep a personal wishlist while you browse."],
+              ["Browse your way", "Explore by category, search, or new arrivals."],
+            ].map(([title, text], index) => (
+              <Reveal key={title} delay={index * 0.06}>
+                <div className="border-t border-[#cfc8ba] pt-4">
+                  <h3 className="font-serif text-xl">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#69655d]">{text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 };
