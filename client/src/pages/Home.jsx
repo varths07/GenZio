@@ -6,7 +6,7 @@ import { useShop } from '../context/ShopContext';
 import { Reveal } from '../components/ui/Reveal';
 
 const heroImage =
-  'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=2200&q=85';
+  'https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&crop=faces,center&w=2200&h=1400&q=85';
 
 const getProductImage = (product) =>
   product.image_url || product.image || product.images?.[0] || '';
@@ -106,43 +106,83 @@ export const Home = () => {
     return new Date(second.created_at || 0) - new Date(first.created_at || 0);
   });
 
-  const categoryProducts = Array.from(
-    catalogProducts.reduce((groups, product) => {
-      const title = product.subCategory || product.category;
-      if (title && !groups.has(title)) groups.set(title, product);
-      return groups;
-    }, new Map())
-  ).slice(0, 4);
+  const featuredCollections = [
+    {
+      title: "Shirts",
+      matches: (product) =>
+        /shirt/i.test(product.subCategory || product.category || "") &&
+        !/t[ -]?shirts?|tees/i.test(product.subCategory || ""),
+    },
+    {
+      title: "T-shirts",
+      matches: (product) =>
+        /t[ -]?shirts?|tees/i.test(product.subCategory || ""),
+    },
+    {
+      title: "Trousers",
+      matches: (product) =>
+        /trousers?|pants/i.test(product.subCategory || product.category || ""),
+    },
+    {
+      title: "Jeans",
+      matches: (product) =>
+        /jeans?|denim/i.test(product.subCategory || product.category || ""),
+    },
+    {
+      title: "Jackets",
+      matches: (product) =>
+        /jackets?|overshirts?|outerwear/i.test(
+          product.subCategory || product.category || ""
+        ),
+    },
+  ]
+    .map((collection) => ({
+      ...collection,
+      product: catalogProducts.find(
+        (product) =>
+          collection.matches(product) && getProductImage(product)
+      ),
+    }))
+    .filter((collection) => collection.product);
 
-  const newArrivals = catalogProducts
-    .filter((product) => product.isNew || product.isDemo)
+  const flaggedArrivals = catalogProducts
+    .filter((product) => product.isNew || product.is_new || product.isDemo)
     .slice(0, 4);
+  const newArrivals =
+    flaggedArrivals.length > 0
+      ? flaggedArrivals
+      : catalogProducts.slice(0, 4);
   const newArrivalIds = new Set(newArrivals.map((product) => product.id));
   const moreToExplore = catalogProducts
     .filter((product) => !newArrivalIds.has(product.id))
     .slice(0, 4);
   const editorialProduct = catalogProducts[4] || catalogProducts[0];
   const bestSellers = products
-    .filter((product) => product.isBestSeller)
+    .filter((product) => product.isBestSeller || product.is_best_seller)
     .slice(0, 4);
   const currentOffers = products
-    .filter((product) => product.isFlashSale && Number(product.discountPercent) > 0)
+    .filter(
+      (product) =>
+        (product.isFlashSale || product.is_flash_sale) &&
+        Number(product.discountPercent ?? product.discount_percent) > 0
+    )
     .slice(0, 4);
 
   return (
-    <main className="overflow-x-clip bg-[#f4f1ea] text-[#20201d]">
-      <section className="relative isolate flex min-h-[100svh] items-end bg-[#171714] text-[#f4f1ea]">
+    <main className="genzio-home overflow-x-clip bg-[#f4f1ea] text-[#20201d]">
+      <section className="relative isolate flex min-h-[100svh] items-end bg-[#171b20] text-[#f8f6f2]">
         <motion.img
           src={heroImage}
-          alt="Men's contemporary fashion editorial"
-          fetchpriority="high"
+          alt="Male model in a navy waistcoat and white shirt on an architectural city street"
+          fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 z-0 h-full w-full object-cover object-[56%_center]"
+          className="absolute inset-0 z-0 h-full w-full object-cover object-[center_38%]"
           initial={reduceMotion || !canObserve ? false : { scale: 1.035, opacity: 1 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: reduceMotion ? 0 : 1.4, ease: [0.22, 1, 0.36, 1] }}
         />
-        <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/65 via-black/20 to-transparent" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#101820]/85 via-[#101820]/35 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 z-10 h-2/3 bg-gradient-to-t from-[#101820]/55 via-transparent to-transparent" />
         <motion.div
           className="relative z-20 mx-auto w-full max-w-[1600px] px-5 pb-16 pt-36 sm:px-10 sm:pb-20 lg:px-[8vw] lg:pb-[9vh]"
           initial={reduceMotion || !canObserve ? false : { opacity: 1, y: 14 }}
@@ -150,29 +190,32 @@ export const Home = () => {
           transition={{ duration: reduceMotion ? 0 : 0.75, delay: reduceMotion ? 0 : 0.12, ease: [0.22, 1, 0.36, 1] }}
         >
           <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.24em] text-white/80 sm:text-xs">
-            GenZio / Menswear
+            GENZIO <span className="px-1.5 text-white/50">|</span> MENSWEAR
           </p>
-          <h1 className="max-w-3xl font-serif text-5xl leading-[0.98] sm:text-7xl lg:text-[6.5rem]">
+          <h1 className="max-w-2xl font-serif text-5xl leading-[0.98] sm:text-7xl lg:text-[6rem]">
             Dress like
             <br />
             <span className="italic">yourself.</span>
           </h1>
-          <div className="mt-7 flex max-w-xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <p className="max-w-sm text-sm leading-6 text-white/80 sm:text-base">
-              Everyday menswear with a point of view. Find the pieces you will reach for again.
+          <div className="mt-7 flex max-w-2xl flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <p className="max-w-sm text-sm leading-6 text-white/85 sm:text-base">
+              Everyday menswear with a point of view. Find the pieces you'll reach for again.
             </p>
             <Link
               to="/shop"
-              className="inline-flex min-h-12 w-fit items-center gap-5 border border-white/70 px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white hover:text-[#20201d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              className="group inline-flex min-h-12 w-fit items-center gap-5 border border-white/70 px-5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors duration-300 hover:border-[#f8f6f2] hover:bg-[#f8f6f2] hover:text-[#171b20] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:text-xs"
             >
               Explore the collection
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
             </Link>
           </div>
         </motion.div>
-        <span className="absolute bottom-7 right-6 z-20 hidden text-[10px] uppercase tracking-[0.2em] text-white/70 md:block lg:right-[8vw]">
-          Clothing for men
-        </span>
+        <a
+          href="#collections"
+          className="absolute bottom-7 right-6 z-20 hidden items-center gap-3 text-[9px] font-medium uppercase tracking-[0.2em] text-white/75 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:inline-flex lg:right-[8vw]"
+        >
+          Scroll to explore <span aria-hidden="true">↓</span>
+        </a>
       </section>
 
       <section className="mx-auto grid max-w-[1600px] gap-5 px-5 py-16 sm:px-10 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-end lg:gap-14 lg:px-[8vw]">
@@ -201,46 +244,45 @@ export const Home = () => {
         <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
           <Reveal>
             <div>
-              <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#817b70]">
-                The GenZio edit
+              <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#77736c]">
+                Explore the edit
               </p>
               <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
-                Find your everyday
+                Made to be worn
               </h2>
             </div>
           </Reveal>
           <Link
             to="/shop"
-            className="hidden items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-[0.13em] text-[#45423c] transition-colors hover:text-[#8c6b3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8c6b3e] sm:inline-flex"
+            className="hidden items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-[0.13em] text-[#45423c] transition-colors hover:text-[#111111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#111111] sm:inline-flex"
           >
             All collections <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
-        {categoryProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
-            {categoryProducts.map(([title, product], index) => (
+        {featuredCollections.length > 0 ? (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-5 lg:gap-x-6">
+            {featuredCollections.map(({ title, product }, index) => (
               <Reveal
                 key={title}
                 delay={index * 0.07}
-                className={index === 0 ? "col-span-2 lg:col-span-1" : ""}
               >
                 <Link
                   to={getCategoryPath(product.category)}
-                  className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8c6b3e]"
+                  className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#111111]"
                 >
-                  <div className={`overflow-hidden bg-[#e8e4dc] ${index === 0 ? 'aspect-[1.18/1] lg:aspect-[4/5]' : 'aspect-[4/5]'}`}>
+                  <div className="aspect-[4/5] overflow-hidden bg-[#e8e4dc]">
                     <img
                       src={getProductImage(product)}
-                      alt={`${title} from the GenZio men's collection`}
+                      alt={`${product.name} in the ${title} collection`}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.045]"
                     />
                   </div>
-                  <div className="flex items-center justify-between gap-2 pt-3">
+                  <div className="flex items-center justify-between gap-2 border-b border-[#d7d1c6] py-3 transition-colors group-hover:border-[#111111]">
                     <span className="text-sm font-medium sm:text-base">{title}</span>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-[#817b70] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-[#77736c] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                   </div>
                 </Link>
               </Reveal>
@@ -248,7 +290,7 @@ export const Home = () => {
           </div>
         ) : (
           <p className="border-y border-[#d7d1c6] py-8 text-sm text-[#77736c]">
-            The collection will appear here when products are available.
+            Featured collections will appear here when products are available.
           </p>
         )}
       </section>
@@ -274,7 +316,7 @@ export const Home = () => {
           </Reveal>
           <Reveal>
             <div className="group relative min-h-[48svh] overflow-hidden bg-[#d8d3c9] sm:min-h-[68svh] lg:min-h-[78svh]">
-              {editorialProduct ? (
+              {editorialProduct && getProductImage(editorialProduct) ? (
                 <img
                   src={getProductImage(editorialProduct)}
                   alt={editorialProduct.name}
@@ -285,10 +327,10 @@ export const Home = () => {
               ) : (
                 <img
                   src={heroImage}
-                  alt="Men's contemporary fashion editorial"
+                  alt="Male model in a navy waistcoat and white shirt on a city street"
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover object-[56%_center]"
+                  className="absolute inset-0 h-full w-full object-cover object-[center_38%]"
                 />
               )}
             </div>
@@ -317,17 +359,11 @@ export const Home = () => {
         </div>
 
         {newArrivals.length > 0 ? (
-          <div
-            role="region"
-            aria-label="New arrival products"
-            tabIndex={0}
-            className="-mx-5 flex snap-x snap-mandatory gap-x-4 overflow-x-auto overscroll-x-contain px-5 pb-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6b3e] sm:gap-x-5 md:mx-0 md:overflow-visible md:px-0 md:pb-0"
-          >
+          <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
             {newArrivals.map((product, index) => (
               <Reveal
                 key={product.id}
                 delay={index * 0.07}
-                className="w-[78vw] shrink-0 snap-start sm:w-[40vw] md:w-auto md:flex-1 md:snap-none"
               >
                 <HomeProduct
                   product={product}
@@ -346,12 +382,12 @@ export const Home = () => {
       </section>
 
       {moreToExplore.length > 0 && (
-        <section className="bg-[#24241f] text-[#f4f1ea]">
+        <section className="bg-[#eeebe4] text-[#20201d]">
           <div className="mx-auto max-w-[1600px] px-5 py-20 sm:px-10 sm:py-28 lg:px-[8vw]">
             <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
               <Reveal>
                 <div>
-                  <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-white/55">
+                  <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#77736c]">
                     More to explore
                   </p>
                   <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
@@ -361,7 +397,7 @@ export const Home = () => {
               </Reveal>
               <Link
                 to="/shop"
-                className="hidden items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-[0.13em] text-white/75 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:inline-flex"
+                className="hidden items-center gap-2 pb-1 text-xs font-semibold uppercase tracking-[0.13em] text-[#45423c] transition-colors hover:text-[#111111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#111111] sm:inline-flex"
               >
                 Shop all <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
@@ -418,12 +454,12 @@ export const Home = () => {
       )}
 
       {currentOffers.length > 0 && (
-        <section className="bg-[#24241f] text-[#f4f1ea]">
+        <section className="bg-[#eeebe4] text-[#20201d]">
           <div className="mx-auto max-w-[1600px] px-5 py-16 sm:px-10 sm:py-20 lg:px-[8vw]">
             <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
               <Reveal>
                 <div>
-                  <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-white/55">
+                  <p className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[#77736c]">
                     Current offers
                   </p>
                   <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
@@ -433,7 +469,7 @@ export const Home = () => {
               </Reveal>
               <Link
                 to="/sale"
-                className="hidden items-center gap-2 text-xs font-semibold uppercase tracking-[0.13em] text-white/75 hover:text-white sm:inline-flex"
+                className="hidden items-center gap-2 text-xs font-semibold uppercase tracking-[0.13em] text-[#45423c] hover:text-[#111111] sm:inline-flex"
               >
                 View offers <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
@@ -458,11 +494,14 @@ export const Home = () => {
         <Reveal>
           <div className="group relative aspect-[4/3] overflow-hidden bg-[#e8e4dc]">
             <img
-              src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=1400&q=85"
-              alt="Men's contemporary clothing in a relaxed editorial setting"
+              src={getProductImage(editorialProduct) || heroImage}
+              alt={
+                editorialProduct?.name ||
+                "Male model in a navy waistcoat and white shirt on a city street"
+              }
               loading="lazy"
               decoding="async"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             />
           </div>
         </Reveal>
