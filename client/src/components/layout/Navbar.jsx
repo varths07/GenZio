@@ -168,7 +168,7 @@ export const Navbar = () => {
         <div className="col-start-3 row-start-1 flex items-center justify-self-end gap-1 sm:gap-2 lg:gap-3">
           <nav
             aria-label="Featured navigation"
-            className="mr-1 hidden items-center gap-5 xl:flex"
+            className="mr-1 hidden items-center gap-3 lg:flex xl:gap-5"
           >
             {desktopRightLinks.map((link) => (
               <Link
