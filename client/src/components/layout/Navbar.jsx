@@ -101,13 +101,14 @@ export const Navbar = () => {
     }`;
 
   return (
-    <header
-      className={`z-40 border-b transition-[background-color,border-color,color,box-shadow,backdrop-filter] duration-500 ${
-        isHeroOverlay
-          ? "border-transparent bg-transparent text-white shadow-none"
-          : "border-[#e5e0d7] bg-[#F8F6F2]/95 text-[#111111] shadow-sm backdrop-blur-md"
-      } ${isHome ? "fixed inset-x-0 top-0" : "sticky top-0"}`}
-    >
+    <>
+      <header
+        className={`z-40 border-b transition-[background-color,border-color,color,box-shadow,backdrop-filter] duration-500 ${
+          isHeroOverlay
+            ? "border-transparent bg-transparent text-white shadow-none"
+            : "border-[#e5e0d7] bg-[#F8F6F2]/95 text-[#111111] shadow-sm backdrop-blur-md"
+        } ${isHome ? "fixed inset-x-0 top-0" : "sticky top-0"}`}
+      >
       <div className="mx-auto grid min-h-[72px] max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center px-4 sm:min-h-[82px] sm:px-8 lg:px-[5vw]">
         <button
           type="button"
@@ -216,10 +217,11 @@ export const Navbar = () => {
           </Link>
         </div>
       </div>
+      </header>
 
       <AnimatePresence initial={false}>
         {mobileMenuOpen && (
-          <motion.div
+        <motion.div
             className="fixed inset-0 z-[60] bg-black/45 backdrop-blur-[2px] lg:hidden"
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -339,9 +341,9 @@ export const Navbar = () => {
                 </button>
               )}
             </motion.aside>
-          </motion.div>
+        </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 };

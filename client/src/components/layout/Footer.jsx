@@ -42,7 +42,7 @@ export const Footer = () => {
   return (
   <footer
     className={`text-[#f4f1ea] ${
-      isAdmin ? "border-t border-white/10 bg-[#050507]" : "bg-[#111b13]"
+      isAdmin ? "border-t border-white/10 bg-[#050507]" : "bg-[#101820]"
     }`}
   >
     <FooterContent className="mx-auto max-w-[1600px] px-5 pb-8 pt-16 sm:px-10 lg:px-[8vw]">

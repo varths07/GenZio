@@ -39,13 +39,19 @@ const HomeProduct = ({ product, addToCart, toggleWishlist, isInWishlist }) => {
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-[#e8e4dc]">
         <Link to={`/product/${product.id}`} aria-label={`View ${product.name}`}>
-          <img
-            src={image}
-            alt={product.name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
-          />
+          {image ? (
+            <img
+              src={image}
+              alt={product.name}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+            />
+          ) : (
+            <span className="grid h-full place-items-center text-xs text-[#55504A]">
+              Image unavailable
+            </span>
+          )}
         </Link>
         <button
           type="button"
@@ -160,6 +166,8 @@ export const Home = () => {
   const bestSellers = products
     .filter((product) => product.isBestSeller || product.is_best_seller)
     .slice(0, 4);
+  const trendingProducts =
+    bestSellers.length > 0 ? bestSellers : moreToExplore.slice(0, 4);
   const currentOffers = products
     .filter(
       (product) =>
@@ -418,7 +426,7 @@ export const Home = () => {
         </section>
       )}
 
-      {bestSellers.length > 0 && (
+      {trendingProducts.length > 0 && (
         <section className="mx-auto max-w-[1600px] px-5 py-20 sm:px-10 sm:py-28 lg:px-[8vw]">
           <div className="mb-9 flex items-end justify-between gap-6 sm:mb-12">
             <Reveal>
@@ -427,7 +435,7 @@ export const Home = () => {
                   The collection
                 </p>
                 <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
-                  Best sellers
+                  {bestSellers.length > 0 ? "Best sellers" : "Trending now"}
                 </h2>
               </div>
             </Reveal>
@@ -439,7 +447,7 @@ export const Home = () => {
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
-            {bestSellers.map((product, index) => (
+            {trendingProducts.map((product, index) => (
               <Reveal key={product.id} delay={index * 0.07}>
                 <HomeProduct
                   product={product}
